@@ -11,7 +11,8 @@
  *
  * Kvitteringen og resultatdialogen leser resultatet spilltjeneren sender,
  * og testen krever at hver ramme viser sitt, og at alle tre ser de samme
- * tre på tavla.
+ * tre på tavla. Til slutt sendes et skjema fra forrige sak inn i hver app,
+ * og det skal avvises.
  *
  * Kjør med appene oppe (`./kjor.sh rask`): bun run skallspill
  */
@@ -101,10 +102,72 @@ for (const a of APPER) {
   const tavle = await f.locator("#tavle").innerText()
   for (const n of ["Kari", "Ola", "Ingrid"]) if (!tavle.includes(n)) funn.push(`${a.navn}: tavla mangler ${n}`)
 }
+/*
+ * Et skjema fra forrige sak, sendt inn etter rundeskiftet.
+ *
+ * Før ble det godtatt som svar på den nye saken. Hver app åpnes i en egen
+ * fane der hendelsesstrømmen er stengt, så siden aldri får vite at saken
+ * byttet. Skjemaet fylles ut riktig for saken den viser, og sendes inn
+ * først når neste sak har begynt i skallet. Spilltjeneren skal avvise det,
+ * og appen vise avvisningen i feiloppsummeringen.
+ */
+const vent = async (betingelse: () => Promise<boolean>, sekunder: number, hva: string) => {
+  for (let i = 0; i < sekunder; i++) {
+    if (await betingelse()) return
+    await side.waitForTimeout(1000)
+  }
+  throw new Error(`ventet ${sekunder} sekunder på ${hva}`)
+}
+const iRunde = async () => (await ramme("8081").getByRole("button", { name: "Fatt vedtak" }).count()) > 0
+await vent(iRunde, 60, "en ny runde")
+const gammelId = await sakId(ramme("8081"))
+console.log("gammel sak:", gammelId)
+
+const gamle = await Promise.all(
+  APPER.map(async (a) => {
+    const fane = await k.newPage()
+    fane.setDefaultTimeout(20_000)
+    await fane.route("**/hendelser**", (r) => r.abort())
+    await fane.goto(`http://localhost:${a.port}`, { waitUntil: "domcontentloaded" })
+    await fane.getByRole("button", { name: "Fatt vedtak" }).waitFor()
+    return [a, fane] as const
+  }),
+)
+const gammel = data.saker.find((x: any) => x.id === gammelId)
+const gammelKommune = kommuner.includes(gammel.soker.kommune) ? gammel.soker.kommune : ""
+for (const [, fane] of gamle) {
+  await fane.locator(`#v-${gammel.fasit.vedtak}`).check()
+  await fane.selectOption("#hjemmel", gammel.fasit.hjemmel)
+  await fane.locator("#kommune").fill(gammelKommune)
+  await fane.locator("#kommune").press("Escape").catch(() => {})
+  await fane.selectOption("#felle", gammel.fasit.felle ?? "nei")
+}
+
+await vent(async () => (await sakId(ramme("8081"))) !== gammelId && (await iRunde()), 60, "neste sak")
+console.log("ny sak i skallet:", await sakId(ramme("8081")))
+
+for (const [a, fane] of gamle) {
+  await fane.getByRole("button", { name: "Fatt vedtak" }).click()
+  const boks = fane.locator("lt-error-summary")
+  const sett = await boks
+    .getByText("ligger ikke på bordet lenger")
+    .waitFor({ timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (sett) console.log(a.navn, "viste avvisningen av det gamle skjemaet")
+  else funn.push(`${a.navn}: det gamle skjemaet ble ikke avvist i feiloppsummeringen: ${(await boks.innerText().catch(() => "")).replace(/\s+/g, " ")}`)
+  // Og det gamle svaret skal ikke ha blitt svaret på den nye saken.
+  const tavle = await ramme(a.port).locator("#tavle").innerText()
+  const rad = tavle.split("\n").find((l) => l.includes(a.spiller)) ?? ""
+  if (/Levert/.test(rad)) funn.push(`${a.navn}: ${a.spiller} står som levert på den nye saken`)
+}
+
 await b.close()
 
 if (funn.length > 0) {
   console.error(`Fant ${funn.length} avvik:\n${funn.map((f) => `  - ${f}`).join("\n")}`)
   process.exit(1)
 }
-console.log("Tre spillere i skallet fikk full pott, delvis og avvik, og ser den samme tavla.")
+console.log(
+  "Tre spillere i skallet fikk full pott, delvis og avvik, ser den samme tavla, og et gammelt skjema ble avvist i alle tre.",
+)

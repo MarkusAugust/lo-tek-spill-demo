@@ -16,7 +16,7 @@ import { APPNAVN, KAPSEL } from "../lib/lotek"
 import { KOMMUNER } from "../lib/kommuner"
 import { svarInn, tilstand as hentTilstand } from "../lib/spilltjener"
 import type { Feil } from "../lib/tilstand"
-import { valider } from "../lib/validering"
+import { feilFraAvvisning, valider } from "../lib/validering"
 
 export const prerender = false
 
@@ -90,6 +90,7 @@ if (Astro.request.method === "POST") {
     kommune: String(skjema.get("kommune") ?? "").trim(),
     felle: String(skjema.get("felle") ?? "").trim(),
   }
+  const sakId = String(skjema.get("sakId") ?? "").trim() || null
 
   feil = valider(
     svar.vedtak || null,
@@ -101,14 +102,17 @@ if (Astro.request.method === "POST") {
 
   if (feil.length === 0 && spillerId) {
     try {
-      await svarInn(spillerId, {
+      const kvittering = await svarInn(spillerId, {
         vedtak: svar.vedtak,
         hjemmel: svar.hjemmel,
         kommune: svar.kommune || null,
-        // «nei» er et svar: saken er i orden. Spilltjeneren kjenner bare
-        // feltnavn og `null`, så valget oversettes her.
-        felle: svar.felle === "nei" ? null : svar.felle,
+        // «nei» er et svar, saken er i orden, og sendes som det er.
+        felle: svar.felle,
+        sakId,
       })
+      // Spilltjeneren avviser det som likevel ikke er helt, eller et svar
+      // på en sak som ikke ligger på bordet lenger.
+      if (!kvittering.ok) feil = feilFraAvvisning(kvittering)
     } catch {
       // Spilltjeneren svarte ikke. Da skal ikke siden gi en stakksporing:
       // vedtaket står fortsatt i skjemaet, og under kommer venteskjermen

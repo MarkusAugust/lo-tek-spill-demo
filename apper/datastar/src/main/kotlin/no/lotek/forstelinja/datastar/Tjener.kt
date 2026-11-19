@@ -234,25 +234,23 @@ fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) 
       val vedtak = signaler.string("vedtak")?.ifBlank { null }
       val hjemmel = signaler.string("hjemmel")?.ifBlank { null }
       val kommune = signaler.string("kommune")?.ifBlank { null }
-      // «nei» er et svar: saken er i orden. Spilltjeneren kjenner bare
-      // feltnavn og `null`, så valget oversettes her.
-      val felleValg = signaler.string("felle")?.ifBlank { null }
-      val felle = felleValg?.takeIf { it != "nei" }
+      // «nei» er et svar, saken er i orden, og sendes som det er.
+      val felle = signaler.string("felle")?.ifBlank { null }
+      // Saken siden ble tegnet for. Kommer en patch med ny sak aldri fram,
+      // avviser spilltjeneren svaret i stedet for å legge det på den nye.
+      val sakId = signaler.string("sakId")?.ifBlank { null }
 
-      // Appen validerer skjemaet, spilltjeneren teller poeng. Et ufullstendig
-      // vedtak sendes aldri videre; det er feiloppsummeringen som svarer.
-      val feil = valider(vedtak, hjemmel, kommune, felleValg, kommuner)
+      // Appen sier fra ved feltet før svaret sendes. Spilltjeneren avviser
+      // det som likevel ikke er helt, og da er det avvisningen som vises.
+      var feil = valider(vedtak, hjemmel, kommune, felle, kommuner)
 
       if (feil.isEmpty() && spillerId != null) {
-        spilltjener.svar(
-          spillerId,
-          Svar(
-            vedtak = vedtak,
-            hjemmel = hjemmel,
-            kommune = kommune,
-            felle = felle,
-          ),
-        )
+        val kvittering =
+          runCatching {
+              spilltjener.svar(spillerId, Svar(vedtak, hjemmel, kommune, felle, sakId))
+            }
+            .getOrElse { Kvittering(false) }
+        if (!kvittering.ok) feil = feilFraAvvisning(kvittering)
       }
 
       val tilstand = spilltjener.tilstand(spillerId)

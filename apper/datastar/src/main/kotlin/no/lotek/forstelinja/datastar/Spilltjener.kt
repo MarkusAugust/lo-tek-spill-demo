@@ -110,12 +110,14 @@ class Spilltjener(private val adresse: String) {
     }
   }
 
-  suspend fun svar(spillerId: String, svar: Svar) {
-    klient.post("$adresse/api/svar") {
-      contentType(ContentType.Application.Json)
-      setBody(SvarInn(spillerId, svar))
-    }
-  }
+  /** Sender vedtaket. Kvitteringen sier om det ble tatt imot, og hvorfor ikke. */
+  suspend fun svar(spillerId: String, svar: Svar): Kvittering =
+    klient
+      .post("$adresse/api/svar") {
+        contentType(ContentType.Application.Json)
+        setBody(SvarInn(spillerId, svar))
+      }
+      .body()
 
   /**
    * Antallet nettlesere som ser på akkurat nå, og strømmen som følger dem.

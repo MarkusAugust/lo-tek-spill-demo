@@ -105,11 +105,38 @@ class MarkupTest {
   }
 
   @Test
+  fun `en avvisning uten felt står i oppsummeringen uten lenke`() {
+    // Spilltjeneren avviste svaret fordi saken ikke ligger på bordet lenger.
+    // Det finnes ikke noe felt å lenke til, og en lenke til «#null» ville
+    // pekt ingensteds.
+    val feil = feilFraAvvisning(Kvittering(ok = false, grunn = "feil_sak"))
+    val html = brett(tilstand, "Kari", listOf("Bergen"), feil)
+    val boks = html.substringAfter("<lt-error-summary").substringBefore("</lt-error-summary>")
+
+    assertTrue(boks.contains("<li>Saken du svarte på, ligger ikke på bordet lenger."), boks)
+    assertFalse(boks.contains("href=\"#null\""), "en feil uten felt skal ikke lenke")
+  }
+
+  @Test
+  fun `en ufullstendig avvisning står ved feltene den gjelder`() {
+    val feil =
+      feilFraAvvisning(
+        Kvittering(ok = false, grunn = "ufullstendig", felt = listOf(Feltfeil("hjemmel", "ukjent"), Feltfeil("felle", "mangler")))
+      )
+
+    assertEquals(listOf("hjemmel", "felle"), feil.map { it.felt })
+    val html = brett(tilstand, "Kari", listOf("Bergen"), feil)
+    assertTrue(html.contains("""<a href="#hjemmel">Hjemmelen finnes ikke."""), "hjemmelen skal lenkes")
+  }
+
+  @Test
   fun `serveren kan melde et felt som ugyldig`() {
     val html = brett(tilstand, "Kari", listOf("Bergen"), listOf(Feil("hjemmel", "Mangler")))
 
     assertTrue(html.contains("""aria-invalid="true""""), "hjemmelen skal være ugyldig")
     assertTrue(html.contains("Du må rette 1 feil"), "feiloppsummeringen")
+    // Komponenten navngir boksen etter overskriften bare når den har id.
+    assertTrue(html.contains("""<h3 id="feilboks-title">"""), "overskriften i feiloppsummeringen må ha id")
   }
 
   @Test

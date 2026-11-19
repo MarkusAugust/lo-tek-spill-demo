@@ -65,8 +65,9 @@ const feller = [
         <>
           <h3 {...boks.title}>Du må rette {feil.length} feil</h3>
           <ul {...lt.list()}>
+            {/* En avvisning uten felt har ikke noe å lenke til. */}
             {feil.map((f) => (
-              <li><a href={`#${f.felt}`}>{f.melding}</a></li>
+              <li>{f.felt ? <a href={`#${f.felt}`}>{f.melding}</a> : f.melding}</li>
             ))}
           </ul>
         </>
@@ -75,6 +76,9 @@ const feller = [
   </lt-error-summary>
 
   <form class="skjema" method="post" action="/">
+    <!-- Saken skjemaet ble tegnet for. Sendes det inn etter at saken byttet,
+         avviser spilltjeneren svaret i stedet for å legge det på den nye. -->
+    <input type="hidden" name="sakId" value={tilstand.sak.id} />
     <fieldset {...utfall}>
       <legend {...lt.legend()}>Utfall</legend>
       {

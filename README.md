@@ -89,6 +89,8 @@ Når runden er over, kommer resultatet som en **modal dialog**: hva du svarte, h
 
 Hvilket resultat det ble, avgjør spilltjeneren og sender som `meg.resultat`: full pott, delvis, ingen uttelling, avvik eller kom for sent. Appene velger bare tekst og farge for hvert av dem. Ordene står i [GLOSSARY.md](GLOSSARY.md).
 
+Et vedtak kan ikke gjøres om, og spilltjeneren tar derfor bare imot et helt et: vedtak, hjemmel og fella besvart, og det som er fylt ut må finnes. Den avviser også et svar på en sak som ikke ligger på bordet lenger, for et skjema sendt inn etter et rundeskifte ble ellers svar på den nye saken. Hver app validerer i tillegg selv og sier fra ved feltet før svaret sendes, som en del av sammenligningen, og viser avvisningen fra spilltjeneren i den samme feiloppsummeringen.
+
 Den dialogen er grunnen til at `<lt-dialog>` finnes i LO-TEK. Å åpne en `<dialog>` er et kall, og en server som bare sender HTML kan ikke kalle noe; `<dialog open>` er bare en boks på siden. Demoen fant altså et hull i designsystemet, og hullet ble tettet der.
 
 Har alle svart før fristen, kortes den inn til fire sekunder framfor å ende

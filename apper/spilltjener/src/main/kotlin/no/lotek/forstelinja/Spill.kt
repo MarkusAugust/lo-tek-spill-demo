@@ -152,9 +152,53 @@ data class Svar(
    * med «Ingen treff» mens du skriver.
    */
   val kommune: String? = null,
-  /** Feltet spilleren mener er feil, eller `null` for «saken er i orden». */
+  /**
+   * Feltet spilleren mener er feil, eller `nei` for «saken er i orden».
+   *
+   * `null` betyr også «i orden» så lenge appene som ikke er rullet ut ennå,
+   * oversetter `nei` til `null`. Når de er ute, er `null` ubesvart.
+   */
   val felle: String? = null,
+  /**
+   * Saken skjemaet ble tegnet for. Et skjema fra forrige sak, sendt inn
+   * etter rundeskiftet, ble ellers svar på den nye.
+   *
+   * Valgfri så lenge appene som ikke er rullet ut ennå, ikke sender den.
+   */
+  val sakId: String? = null,
 )
+
+/** Feltene i fella, slik `felle` i et svar og i fasiten skriver dem. */
+val FELLER = setOf("fodselsdato", "kommune", "epost")
+
+/** Hvorfor et svar ikke ble tatt imot. Se `GLOSSARY.md`. */
+@Serializable
+enum class Grunn {
+  @SerialName("runden_er_over") RUNDEN_ER_OVER,
+  @SerialName("alt_svart") ALT_SVART,
+  @SerialName("ukjent_spiller") UKJENT_SPILLER,
+  @SerialName("feil_sak") FEIL_SAK,
+  @SerialName("ufullstendig") UFULLSTENDIG,
+}
+
+@Serializable
+enum class Felt {
+  @SerialName("vedtak") VEDTAK,
+  @SerialName("hjemmel") HJEMMEL,
+  @SerialName("kommune") KOMMUNE,
+  @SerialName("felle") FELLE,
+}
+
+@Serializable
+enum class Feil {
+  @SerialName("mangler") MANGLER,
+  @SerialName("ukjent") UKJENT,
+}
+
+@Serializable data class Feltfeil(val felt: Felt, val feil: Feil)
+
+/** Et svar spilltjeneren ikke tok imot. Feltene er med når svaret ikke var helt. */
+data class Avvisning(val grunn: Grunn, val felt: List<Feltfeil> = emptyList())
 
 data class Spiller(
   val id: String,
@@ -274,18 +318,44 @@ class Spill(
    * Et svar kan ikke endres. Det er ikke pynt: spilleren får vite med én
    * gang om svaret traff, og uten låsen kunne hvem som helst prøvd seg fram
    * til full pott.
+   *
+   * Returnerer `null` når svaret er tatt imot, og ellers hvorfor det ikke
+   * ble det. Et avvist svar låses ikke, så spilleren kan svare på nytt.
    */
-  suspend fun svar(spillerId: String, svar: Svar): Boolean {
-    val godtatt =
+  suspend fun svar(spillerId: String, svar: Svar): Avvisning? {
+    val avvisning =
       laas.withLock {
-        val spiller = spillere[spillerId] ?: return@withLock false
-        if (fase != Fase.RUNDE) return@withLock false
-        if (spiller.svar != null) return@withLock false
+        val spiller = spillere[spillerId] ?: return@withLock Avvisning(Grunn.UKJENT_SPILLER)
+        if (fase != Fase.RUNDE) return@withLock Avvisning(Grunn.RUNDEN_ER_OVER)
+        if (svar.sakId != null && svar.sakId != sak.id) return@withLock Avvisning(Grunn.FEIL_SAK)
+        if (spiller.svar != null) return@withLock Avvisning(Grunn.ALT_SVART)
+        val feil = feltfeil(svar)
+        if (feil.isNotEmpty()) return@withLock Avvisning(Grunn.UFULLSTENDIG, feil)
         spiller.svar = svar
-        true
+        null
       }
-    if (godtatt) meld()
-    return godtatt
+    if (avvisning == null) meld()
+    return avvisning
+  }
+
+  /**
+   * Det som mangler eller ikke finnes i et svar.
+   *
+   * Et låst svar kan ikke gjøres om, og må derfor være helt: vedtak, hjemmel
+   * og fella besvart, og det som er fylt ut må finnes. En tom kommune er et
+   * svar, for én sak viser til en kommune som ikke finnes lenger.
+   */
+  private fun feltfeil(svar: Svar): List<Feltfeil> = buildList {
+    if (svar.vedtak == null) add(Feltfeil(Felt.VEDTAK, Feil.MANGLER))
+    val hjemmel = svar.hjemmel?.ifBlank { null }
+    when {
+      hjemmel == null -> add(Feltfeil(Felt.HJEMMEL, Feil.MANGLER))
+      samling.hjemler.none { it.kode == hjemmel } -> add(Feltfeil(Felt.HJEMMEL, Feil.UKJENT))
+    }
+    val kommune = svar.kommune?.ifBlank { null }
+    if (kommune != null && kommune !in kommuner) add(Feltfeil(Felt.KOMMUNE, Feil.UKJENT))
+    val felle = svar.felle?.ifBlank { null }
+    if (felle != null && felle != "nei" && felle !in FELLER) add(Feltfeil(Felt.FELLE, Feil.UKJENT))
   }
 
   /**
@@ -379,7 +449,7 @@ class Spill(
     // Tomt felt er et svar: det betyr «kommunen finnes ikke lenger».
     val kommune = svar.kommune?.ifBlank { null } == riktigKommune(sak)
     // Fella teller begge veier: å se den, og å se at det ikke er noen.
-    val felle = svar.felle == fasit.felle
+    val felle = svar.felle?.takeIf { it != "nei" } == fasit.felle
     return Vurdering(
       vedtakRiktig = vedtak,
       hjemmelRiktig = hjemmel,

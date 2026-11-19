@@ -23,5 +23,17 @@ Kvitteringen og resultatdialogen leser det samme feltet.
 koden). Ikke det samme som resultatet: «Utfall» er det spilleren svarer,
 «resultat» er hvordan svaret gikk.
 
+**Avvisning**: et svar spilltjeneren ikke tar imot, med grunnen som verdi.
+Appene skriver teksten og viser den i feiloppsummeringen.
+
+- `runden_er_over`, `alt_svart`, `ukjent_spiller` og `feil_sak` (svaret
+  gjelder en sak som ikke ligger på bordet lenger) gir 409.
+- `ufullstendig` gir 422, med hvert felt som `mangler` eller er `ukjent`.
+  Feltene heter `vedtak`, `hjemmel`, `kommune` og `felle`.
+
+Et låst svar er alltid et helt svar: vedtak, hjemmel og fella er besvart, og
+det som er fylt ut finnes. Fella besvares med et feltnavn, eller `nei` for
+«saken er i orden».
+
 **Med på saken** (`medPaSaken`): spilleren var påmeldt da runden begynte.
 Skiller `avvik` fra `sent`.

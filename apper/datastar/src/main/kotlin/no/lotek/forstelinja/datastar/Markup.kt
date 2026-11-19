@@ -826,11 +826,16 @@ private fun vedtakskort(tilstand: Tilstand, kommuner: List<String>, feil: List<F
       """
       <!-- Serveren skriver overskriften og lista. Komponenten gir boksen
            klassen, rollen og tabbestoppen, flytter fokus hit og tar
-           klikkene på lenkene. -->
+           klikkene på lenkene. Overskriften har id, så komponenten kan gi
+           boksen navnet sitt: uten den tar boksen fokus som et varsel
+           skjermleseren ikke kan navngi. -->
       <lt-error-summary id="feilboks">
-        <h3>Du må rette ${feil.size} feil</h3>
+        <h3 id="feilboks-title">Du må rette ${feil.size} feil</h3>
         <ul class="lt-list">
-          ${feil.joinToString("\n") { """<li><a href="#${it.felt}">${it.melding.trygg()}</a></li>""" }}
+          ${feil.joinToString("\n") {
+            if (it.felt == null) """<li>${it.melding.trygg()}</li>"""
+            else """<li><a href="#${it.felt}">${it.melding.trygg()}</a></li>"""
+          }}
         </ul>
       </lt-error-summary>"""
     }
@@ -844,7 +849,9 @@ private fun vedtakskort(tilstand: Tilstand, kommuner: List<String>, feil: List<F
 
       $feiloppsummering
 
-      <form class="skjema" data-on:submit="@post('/svar')">
+      <!-- `sakId` følger skjemaet, så et svar fra en side som aldri fikk
+           patchen med ny sak, ikke legges på den. -->
+      <form class="skjema" data-signals:sak-id="'${tilstand.sak.id.trygg()}'" data-on:submit="@post('/svar')">
         <!-- `.lt-radio-row` er raden som holder knappen og teksten ved
              siden av hverandre. Uten den ligger de to inntil hverandre uten
              luft, for `.lt-label` er et vanlig blokkelement. -->

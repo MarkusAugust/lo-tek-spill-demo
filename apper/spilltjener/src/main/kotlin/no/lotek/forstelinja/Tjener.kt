@@ -44,7 +44,9 @@ data class BliMedInn(
 
 @Serializable data class GaAvInn(val spillerId: String)
 
-@Serializable data class Kvittering(val ok: Boolean, val grunn: String? = null)
+/** Svaret på et vedtak. Er det avvist, sier `grunn` hvorfor og `felt` hva som manglet. */
+@Serializable
+data class Kvittering(val ok: Boolean, val grunn: Grunn? = null, val felt: List<Feltfeil> = emptyList())
 
 /**
  * Hvor ofte strømmen sier fra at den lever, når ingenting skjer.
@@ -83,13 +85,18 @@ fun Application.spillModul(spill: Spill, varme: Varme) {
 
     post("/api/svar") {
       val inn = call.receive<SvarInn>()
-      val godtatt = spill.svar(inn.spillerId, inn.svar)
-      // Har alle svart, er det ingen grunn til å vente ut fristen.
-      if (godtatt) spill.avsluttHvisAlleHarSvart()
-      call.respond(
-        if (godtatt) Kvittering(true)
-        else Kvittering(false, "Runden tar ikke imot svar nå, spilleren er ukjent, eller vedtaket er alt fattet")
-      )
+      val avvisning = spill.svar(inn.spillerId, inn.svar)
+      if (avvisning == null) {
+        // Har alle svart, er det ingen grunn til å vente ut fristen.
+        spill.avsluttHvisAlleHarSvart()
+        call.respond(Kvittering(true))
+        return@post
+      }
+      // 422 når svaret ikke er helt, 409 når spillet ikke tar imot det nå.
+      // En klient som bare ser på statusen, merker det også.
+      val status =
+        if (avvisning.grunn == Grunn.UFULLSTENDIG) HttpStatusCode.UnprocessableEntity else HttpStatusCode.Conflict
+      call.respond(status, Kvittering(false, avvisning.grunn, avvisning.felt))
     }
 
 

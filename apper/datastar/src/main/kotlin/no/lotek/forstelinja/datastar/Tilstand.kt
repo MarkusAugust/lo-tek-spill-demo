@@ -119,7 +119,18 @@ data class Svar(
   val hjemmel: String? = null,
   val kommune: String? = null,
   val felle: String? = null,
+  /** Saken skjemaet ble tegnet for. Spilltjeneren avviser et svar på en annen. */
+  val sakId: String? = null,
 )
+
+/**
+ * Svaret fra spilltjeneren på et vedtak. Er det avvist, sier `grunn` hvorfor
+ * og `felt` hva som manglet; se `GLOSSARY.md`.
+ */
+@Serializable
+data class Kvittering(val ok: Boolean, val grunn: String? = null, val felt: List<Feltfeil> = emptyList())
+
+@Serializable data class Feltfeil(val felt: String, val feil: String)
 
 @Serializable data class GaAvInn(val spillerId: String)
 

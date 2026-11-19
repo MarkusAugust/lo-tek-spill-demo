@@ -436,9 +436,11 @@ function Vedtakskort({
           <>
             <h3 {...boks.title}>Du må rette {feil.length} feil</h3>
             <ul {...lt.list()}>
+              {/* En avvisning uten felt, som at saken ikke ligger på bordet
+                  lenger, har ikke noe å lenke til. */}
               {feil.map((f) => (
-                <li key={f.felt}>
-                  <a href={`#${f.felt}`}>{f.melding}</a>
+                <li key={f.felt ?? f.melding}>
+                  {f.felt ? <a href={`#${f.felt}`}>{f.melding}</a> : f.melding}
                 </li>
               ))}
             </ul>
@@ -1408,10 +1410,20 @@ export function Skjerm({
       const svar = await fetch("/svar", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(skjema),
+        // Saken skjemaet står på, så spilltjeneren kan avvise et svar som
+        // kommer etter at saken byttet.
+        body: JSON.stringify({ ...skjema, sakId: bilde.tilstand.sak.id }),
       })
       if (!svar.ok) throw new Error(`Serveren svarte ${svar.status}`)
-      settBilde((await svar.json()) as Skjermbilde)
+      const nytt = (await svar.json()) as Skjermbilde
+      // Avviste spilltjeneren svaret fordi saken byttet, kommer den nye
+      // saken med i svaret. Skjemaet tømmes for den nye saken her, og ikke
+      // i effekten under, som ellers ville visket ut avvisningen også.
+      if (nytt.tilstand.sak.id !== forrigeSak.current) {
+        forrigeSak.current = nytt.tilstand.sak.id
+        settSkjema(TOMT_SKJEMA)
+      }
+      settBilde(nytt)
     } catch {
       // Et vedtak som forsvinner i stillhet er det verste som kan skje her:
       // spilleren tror hun har levert, og runden går fra henne.

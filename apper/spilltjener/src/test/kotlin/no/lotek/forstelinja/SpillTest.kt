@@ -101,7 +101,7 @@ class SpillTest {
 
     val ukjent = spill.sak.soker.kommune !in kommuner
 
-    spill.svar(spiller.id, Svar(kommune = null))
+    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", kommune = null))
     val vurdering = spill.tilstand(spiller.id).meg?.vurdering
     assertNotNull(vurdering)
     assertEquals(ukjent, vurdering.kommuneRiktig, "tomt felt er riktig bare når kommunen mangler")
@@ -114,7 +114,7 @@ class SpillTest {
 
     // Bare fella er riktig, resten med vilje feil.
     val feilVedtak = if (spill.sak.fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET
-    spill.svar(spiller.id, Svar(feilVedtak, "finnes ikke", "Bergen", spill.sak.fasit.felle))
+    spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", spill.sak.fasit.felle))
     klokke.gaa(RUNDE_MS)
     spill.tikk()
 
@@ -143,12 +143,10 @@ class SpillTest {
 
     // Spilleren får vite med én gang om svaret traff. Uten låsen kunne hvem
     // som helst prøvd seg fram til full pott.
-    assertTrue(spill.svar(spiller.id, Svar(feilVedtak, "finnes ikke", "Bergen", feilFelle)))
-    assertFalse(
-      spill.svar(
-        spiller.id,
-        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
-      )
+    assertNull(spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", feilFelle)))
+    assertEquals(
+      Grunn.ALT_SVART,
+      spill.svar(spiller.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))?.grunn,
     )
 
     klokke.gaa(RUNDE_MS)
@@ -168,7 +166,7 @@ class SpillTest {
     // Riktig vedtak, feil hjemmel, riktig kommune, riktig felle.
     spill.svar(
       spiller.id,
-      Svar(fasit.vedtak, "finnes ikke", spill.sak.soker.kommune, fasit.felle),
+      Svar(fasit.vedtak, annenHjemmel(spill), spill.sak.soker.kommune, fasit.felle),
     )
 
     val vurdering = spill.tilstand(spiller.id).meg?.vurdering
@@ -225,10 +223,10 @@ class SpillTest {
     assertEquals(Fase.OPPGJOR, spill.fase)
 
     val fasit = spill.sak.fasit
-    assertFalse(spill.svar(
-      spiller.id,
-      Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle),
-    ))
+    assertEquals(
+      Grunn.RUNDEN_ER_OVER,
+      spill.svar(spiller.id, Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle))?.grunn,
+    )
     assertEquals(0, spill.tilstand(spiller.id).meg?.poeng)
   }
 
@@ -405,12 +403,120 @@ class SpillTest {
     assertEquals(listOf(35, 30), topp.map { it.poeng })
   }
 
+  /** En hjemmel som finnes, men ikke er den riktige. */
+  private fun annenHjemmel(spill: Spill) =
+    samling.hjemler.map { it.kode }.first { it != spill.sak.fasit.hjemmel }
+
+  /** Et helt og riktig svar på saken som ligger på bordet. */
+  private fun riktig(spill: Spill) =
+    spill.sak.fasit.let {
+      Svar(it.vedtak, it.hjemmel, spill.sak.soker.kommune, it.felle ?: "nei", sakId = spill.sak.id)
+    }
+
+  @Test
+  fun `et svar på en sak som ikke ligger på bordet, avvises`() = runTest {
+    // Et skjema fra forrige sak, sendt inn etter rundeskiftet, ble før
+    // godtatt som svar på den nye. Svaret sier nå hvilken sak det gjelder.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+
+    val avvist = spill.svar(kari.id, riktig(spill).copy(sakId = "en annen sak"))
+
+    assertEquals(Grunn.FEIL_SAK, avvist?.grunn)
+    assertNull(spill.tilstand(kari.id).meg?.svar, "et avvist svar låses ikke")
+    assertNull(spill.svar(kari.id, riktig(spill)), "svaret på riktig sak går inn")
+  }
+
+  @Test
+  fun `et ufullstendig svar avvises med hvert felt som mangler, og låses ikke`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+
+    val avvist = spill.svar(kari.id, Svar(kommune = "Oslo", felle = "nei", sakId = spill.sak.id))
+
+    assertEquals(Grunn.UFULLSTENDIG, avvist?.grunn)
+    assertEquals(
+      listOf(Feltfeil(Felt.VEDTAK, Feil.MANGLER), Feltfeil(Felt.HJEMMEL, Feil.MANGLER)),
+      avvist?.felt,
+    )
+    assertNull(spill.tilstand(kari.id).meg?.svar, "et avvist svar låses ikke")
+    assertNull(spill.svar(kari.id, riktig(spill)), "spilleren kan svare helt etterpå")
+  }
+
+  @Test
+  fun `en hjemmel, kommune eller felle som ikke finnes, avvises`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+
+    val avvist =
+      spill.svar(
+        kari.id,
+        riktig(spill).copy(hjemmel = "§ 99-9", kommune = "Mosvik", felle = "skonummer"),
+      )
+
+    assertEquals(Grunn.UFULLSTENDIG, avvist?.grunn)
+    assertEquals(
+      listOf(
+        Feltfeil(Felt.HJEMMEL, Feil.UKJENT),
+        Feltfeil(Felt.KOMMUNE, Feil.UKJENT),
+        Feltfeil(Felt.FELLE, Feil.UKJENT),
+      ),
+      avvist?.felt,
+    )
+  }
+
+  @Test
+  fun `en tom kommune er et svar, ikke en mangel`() = runTest {
+    // Én sak viser til en kommune som ikke finnes lenger, og da er tomt
+    // felt det riktige svaret.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+
+    assertNull(spill.svar(kari.id, riktig(spill).copy(kommune = null)))
+  }
+
+  @Test
+  fun `«nei» er svaret på at saken er i orden`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+    // Sakene veksler mellom med og uten felle, så ta den som er uten.
+    if (spill.sak.fasit.felle != null) tilNesteSak(spill)
+    assertNull(spill.sak.fasit.felle)
+
+    assertNull(spill.svar(kari.id, riktig(spill).copy(felle = "nei")))
+
+    assertEquals(true, spill.tilstand(kari.id).meg?.vurdering?.felleRiktig)
+  }
+
+  @Test
+  fun `en ukjent spiller avvises`() = runTest {
+    val spill = nyttSpill()
+
+    assertEquals(Grunn.UKJENT_SPILLER, spill.svar("finnes ikke", riktig(spill))?.grunn)
+  }
+
+  @Test
+  fun `mens appene rulles ut, godtas svar uten sak og med tom felle`() = runTest {
+    // Steg 1 av to. Appene som ikke er rullet ut ennå, sender verken
+    // `sakId` eller «nei», og skal ikke miste svaret sitt. Steg 2 krever
+    // begge, og denne testen snus da.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+    val fasit = spill.sak.fasit
+
+    assertNull(spill.svar(kari.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle)))
+    klokke.gaa(RUNDE_MS)
+    spill.tikk()
+
+    assertEquals(Resultat.FULL, spill.tilstand(kari.id).meg?.resultat, "tom felle betyr fortsatt «i orden»")
+  }
+
   /** Et svar der alt er feil, så det gir null poeng. */
   private fun alltFeil(spill: Spill): Svar {
     val fasit = spill.sak.fasit
     return Svar(
       vedtak = if (fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET,
-      hjemmel = "finnes ikke",
+      hjemmel = annenHjemmel(spill),
       kommune = "Bergen",
       felle = if (fasit.felle == null) "epost" else null,
     )

@@ -104,7 +104,18 @@ export type Tilstand = {
 }
 
 /** Feilene i skjemaet, funnet på serveren. */
-export type Feil = { felt: string; melding: string }
+/** En feil som skal vises. `felt` er id-en i skjemaet, eller `null` for en feil uten felt. */
+export type Feil = { felt: string | null; melding: string }
+
+/**
+ * Svaret fra spilltjeneren på et vedtak. Er det avvist, sier `grunn` hvorfor
+ * og `felt` hva som manglet; se `GLOSSARY.md`.
+ */
+export type Kvittering = {
+  ok: boolean
+  grunn: "runden_er_over" | "alt_svart" | "ukjent_spiller" | "feil_sak" | "ufullstendig" | null
+  felt: { felt: "vedtak" | "hjemmel" | "kommune" | "felle"; feil: "mangler" | "ukjent" }[]
+}
 
 /** Det serveren sender ned ved hver oppdatering. */
 export type Skjermbilde = {

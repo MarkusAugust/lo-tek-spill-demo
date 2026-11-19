@@ -5,7 +5,7 @@ import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/
 import { KOMMUNER } from "./kommuner"
 import { KAPSEL, bliMed, erTest, gaAv, pulsen, svarInn, tilstand } from "./spilltjener"
 import type { Skjermbilde } from "./tilstand"
-import { valider } from "./validering"
+import { feilFraAvvisning, valider } from "./validering"
 
 /**
  * Appserveren.
@@ -244,14 +244,22 @@ export default {
       const vedtak = inn.vedtak?.trim() || null
       const hjemmel = inn.hjemmel?.trim() || null
       const kommune = inn.kommune?.trim() || null
-      // «nei» er et svar: saken er i orden. Spilltjeneren kjenner bare
-      // feltnavn og `null`, så valget oversettes her.
-      const felleValg = inn.felle?.trim() || null
-      const felle = felleValg === "nei" ? null : felleValg
+      // «nei» er et svar, saken er i orden, og sendes som det er.
+      const felle = inn.felle?.trim() || null
+      // Saken skjemaet ble tegnet for, fra nettleseren. Har siden ikke fått
+      // med seg at saken byttet, avviser spilltjeneren svaret i stedet for
+      // å legge det på den nye.
+      const sakId = inn.sakId?.trim() || null
 
-      const feil = valider(vedtak, hjemmel, kommune, felleValg, KOMMUNER)
+      // Appen sier fra ved feltet før svaret sendes. Spilltjeneren avviser
+      // det som likevel ikke er helt, og da er det avvisningen som vises.
+      let feil = valider(vedtak, hjemmel, kommune, felle, KOMMUNER)
       if (feil.length === 0 && spillerId) {
-        await svarInn(spillerId, { vedtak, hjemmel, kommune, felle })
+        const kvittering = await svarInn(spillerId, { vedtak, hjemmel, kommune, felle, sakId }).catch(
+          () => null,
+        )
+        if (!kvittering) feil = [{ felt: null, melding: "Vedtaket kom ikke fram. Prøv igjen." }]
+        else if (!kvittering.ok) feil = feilFraAvvisning(kvittering)
       }
 
       return Response.json(await skjermbilde(spillerId, feil))
