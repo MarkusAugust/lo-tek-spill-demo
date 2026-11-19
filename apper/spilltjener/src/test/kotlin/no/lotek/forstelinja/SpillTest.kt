@@ -74,7 +74,7 @@ class SpillTest {
 
     spill.svar(
       spiller.id,
-      Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
+      Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
     )
     klokke.gaa(RUNDE_MS)
     spill.tikk()
@@ -101,7 +101,7 @@ class SpillTest {
 
     val ukjent = spill.sak.soker.kommune !in kommuner
 
-    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", kommune = null))
+    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", kommune = null, felle = "nei", sakId = spill.sak.id))
     val vurdering = spill.tilstand(spiller.id).meg?.vurdering
     assertNotNull(vurdering)
     assertEquals(ukjent, vurdering.kommuneRiktig, "tomt felt er riktig bare når kommunen mangler")
@@ -114,7 +114,7 @@ class SpillTest {
 
     // Bare fella er riktig, resten med vilje feil.
     val feilVedtak = if (spill.sak.fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET
-    spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", spill.sak.fasit.felle))
+    spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", spill.sak.fasit.felle ?: "nei", spill.sak.id))
     klokke.gaa(RUNDE_MS)
     spill.tikk()
 
@@ -139,14 +139,14 @@ class SpillTest {
     val fasit = spill.sak.fasit
     val feilVedtak = if (fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET
     // Fella teller begge veier, så «ingen felle» er riktig svar i noen saker.
-    val feilFelle = if (fasit.felle == null) "epost" else null
+    val feilFelle = if (fasit.felle == null) "epost" else "nei"
 
     // Spilleren får vite med én gang om svaret traff. Uten låsen kunne hvem
     // som helst prøvd seg fram til full pott.
-    assertNull(spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", feilFelle)))
+    assertNull(spill.svar(spiller.id, Svar(feilVedtak, annenHjemmel(spill), "Bergen", feilFelle, spill.sak.id)))
     assertEquals(
       Grunn.ALT_SVART,
-      spill.svar(spiller.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))?.grunn,
+      spill.svar(spiller.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id))?.grunn,
     )
 
     klokke.gaa(RUNDE_MS)
@@ -166,7 +166,7 @@ class SpillTest {
     // Riktig vedtak, feil hjemmel, riktig kommune, riktig felle.
     spill.svar(
       spiller.id,
-      Svar(fasit.vedtak, annenHjemmel(spill), spill.sak.soker.kommune, fasit.felle),
+      Svar(fasit.vedtak, annenHjemmel(spill), spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
     )
 
     val vurdering = spill.tilstand(spiller.id).meg?.vurdering
@@ -189,7 +189,7 @@ class SpillTest {
     val spiller = spill.bliMed("Ingrid", Stack.ASTRO)
 
     // Fasiten skal fortsatt være skjult, også for den som har svart.
-    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", "Oslo", null))
+    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", "Oslo", "nei", spill.sak.id))
 
     val tilstand = spill.tilstand(spiller.id)
     assertNotNull(tilstand.meg?.vurdering)
@@ -225,7 +225,7 @@ class SpillTest {
     val fasit = spill.sak.fasit
     assertEquals(
       Grunn.RUNDEN_ER_OVER,
-      spill.svar(spiller.id, Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle))?.grunn,
+      spill.svar(spiller.id, Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle ?: "nei", sakId = spill.sak.id))?.grunn,
     )
     assertEquals(0, spill.tilstand(spiller.id).meg?.poeng)
   }
@@ -236,11 +236,11 @@ class SpillTest {
     val en = spill.bliMed("Kari", Stack.TANSTACK)
     val to = spill.bliMed("Ola", Stack.DATASTAR)
 
-    spill.svar(en.id, Svar(Vedtak.INNVILGET, "§ 4-1", null))
+    spill.svar(en.id, Svar(Vedtak.INNVILGET, "§ 4-1", null, "nei", spill.sak.id))
     spill.avsluttHvisAlleHarSvart()
     assertEquals(Fase.RUNDE, spill.fase, "én av to har svart, runden skal gå videre")
 
-    spill.svar(to.id, Svar(Vedtak.INNVILGET, "§ 4-1", null))
+    spill.svar(to.id, Svar(Vedtak.INNVILGET, "§ 4-1", null, "nei", spill.sak.id))
     spill.avsluttHvisAlleHarSvart()
 
     // Ikke med én gang: den som svarte sist trykket nettopp, og skal rekke å
@@ -260,7 +260,7 @@ class SpillTest {
     // Svarer noen ett sekund før fristen, skal ikke «alle har svart» skyve
     // den fire sekunder ut.
     klokke.gaa(RUNDE_MS - 1_000)
-    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", null))
+    spill.svar(spiller.id, Svar(Vedtak.INNVILGET, "§ 4-1", null, "nei", spill.sak.id))
     spill.avsluttHvisAlleHarSvart()
 
     klokke.gaa(1_000)
@@ -283,7 +283,7 @@ class SpillTest {
       val fasit = spill.sak.fasit
       spill.svar(
         her.id,
-        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
+        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
       )
       klokke.gaa(RUNDE_MS)
       spill.tikk()
@@ -293,7 +293,7 @@ class SpillTest {
 
     assertEquals(Fase.RUNDE, spill.fase)
     val fasit = spill.sak.fasit
-    spill.svar(her.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))
+    spill.svar(her.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id))
     spill.avsluttHvisAlleHarSvart()
 
     klokke.gaa(PUST_MS)
@@ -313,7 +313,7 @@ class SpillTest {
       val fasit = spill.sak.fasit
       spill.svar(
         spiller.id,
-        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
+        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
       )
 
       klokke.gaa(RUNDE_MS)
@@ -349,7 +349,7 @@ class SpillTest {
       val fasit = spill.sak.fasit
       spill.svar(
         spiller.id,
-        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
+        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
       )
       klokke.gaa(RUNDE_MS)
       spill.tikk()
@@ -376,7 +376,7 @@ class SpillTest {
       val fasit = spill.sak.fasit
       spill.svar(
         spiller.id,
-        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle),
+        Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id),
       )
       klokke.gaa(RUNDE_MS)
       spill.tikk()
@@ -496,19 +496,24 @@ class SpillTest {
   }
 
   @Test
-  fun `mens appene rulles ut, godtas svar uten sak og med tom felle`() = runTest {
-    // Steg 1 av to. Appene som ikke er rullet ut ennå, sender verken
-    // `sakId` eller «nei», og skal ikke miste svaret sitt. Steg 2 krever
-    // begge, og denne testen snus da.
+  fun `et svar uten sak avvises, for da kan ingen si hvilken sak det gjelder`() = runTest {
     val spill = nyttSpill()
     val kari = spill.bliMed("Kari", Stack.ASTRO)
-    val fasit = spill.sak.fasit
 
-    assertNull(spill.svar(kari.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle)))
-    klokke.gaa(RUNDE_MS)
-    spill.tikk()
+    assertEquals(Grunn.FEIL_SAK, spill.svar(kari.id, riktig(spill).copy(sakId = null))?.grunn)
+  }
 
-    assertEquals(Resultat.FULL, spill.tilstand(kari.id).meg?.resultat, "tom felle betyr fortsatt «i orden»")
+  @Test
+  fun `en tom felle er ubesvart, ikke «i orden»`() = runTest {
+    // «Saken er i orden» er et svar, og skrives «nei». Uten dette kunne en
+    // spiller låse et svar på et spørsmål hun aldri tok stilling til.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.ASTRO)
+
+    val avvist = spill.svar(kari.id, riktig(spill).copy(felle = null))
+
+    assertEquals(Grunn.UFULLSTENDIG, avvist?.grunn)
+    assertEquals(listOf(Feltfeil(Felt.FELLE, Feil.MANGLER)), avvist?.felt)
   }
 
   /** Et svar der alt er feil, så det gir null poeng. */
@@ -518,7 +523,8 @@ class SpillTest {
       vedtak = if (fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET,
       hjemmel = annenHjemmel(spill),
       kommune = "Bergen",
-      felle = if (fasit.felle == null) "epost" else null,
+      felle = if (fasit.felle == null) "epost" else "nei",
+      sakId = spill.sak.id,
     )
   }
 
@@ -550,7 +556,7 @@ class SpillTest {
     val kari = spill.bliMed("Kari", Stack.TANSTACK)
     val fasit = spill.sak.fasit
 
-    spill.svar(kari.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))
+    spill.svar(kari.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id))
 
     assertEquals(Resultat.FULL, spill.tilstand(kari.id).meg?.resultat)
   }
@@ -644,7 +650,7 @@ class SpillTest {
     // vakt» uten et ord.
     repeat(RUNDER_PER_SPILL) {
       val fasit = spill.sak.fasit
-      spill.svar(blir.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))
+      spill.svar(blir.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle ?: "nei", spill.sak.id))
       klokke.gaa(RUNDE_MS)
       spill.tikk()
       klokke.gaa(OPPGJOR_MS)
@@ -673,7 +679,7 @@ class SpillTest {
     val sterk = spill.bliMed("Sterk", Stack.DATASTAR)
 
     val fasit = spill.sak.fasit
-    spill.svar(sterk.id, Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle))
+    spill.svar(sterk.id, Svar(vedtak = fasit.vedtak, hjemmel = fasit.hjemmel, felle = fasit.felle ?: "nei", sakId = spill.sak.id))
     klokke.gaa(RUNDE_MS)
     spill.tikk()
 

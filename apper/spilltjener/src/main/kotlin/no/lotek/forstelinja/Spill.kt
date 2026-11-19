@@ -152,18 +152,11 @@ data class Svar(
    * med «Ingen treff» mens du skriver.
    */
   val kommune: String? = null,
-  /**
-   * Feltet spilleren mener er feil, eller `nei` for «saken er i orden».
-   *
-   * `null` betyr også «i orden» så lenge appene som ikke er rullet ut ennå,
-   * oversetter `nei` til `null`. Når de er ute, er `null` ubesvart.
-   */
+  /** Feltet spilleren mener er feil, eller `nei` for «saken er i orden». */
   val felle: String? = null,
   /**
    * Saken skjemaet ble tegnet for. Et skjema fra forrige sak, sendt inn
    * etter rundeskiftet, ble ellers svar på den nye.
-   *
-   * Valgfri så lenge appene som ikke er rullet ut ennå, ikke sender den.
    */
   val sakId: String? = null,
 )
@@ -327,7 +320,7 @@ class Spill(
       laas.withLock {
         val spiller = spillere[spillerId] ?: return@withLock Avvisning(Grunn.UKJENT_SPILLER)
         if (fase != Fase.RUNDE) return@withLock Avvisning(Grunn.RUNDEN_ER_OVER)
-        if (svar.sakId != null && svar.sakId != sak.id) return@withLock Avvisning(Grunn.FEIL_SAK)
+        if (svar.sakId != sak.id) return@withLock Avvisning(Grunn.FEIL_SAK)
         if (spiller.svar != null) return@withLock Avvisning(Grunn.ALT_SVART)
         val feil = feltfeil(svar)
         if (feil.isNotEmpty()) return@withLock Avvisning(Grunn.UFULLSTENDIG, feil)
@@ -355,7 +348,10 @@ class Spill(
     val kommune = svar.kommune?.ifBlank { null }
     if (kommune != null && kommune !in kommuner) add(Feltfeil(Felt.KOMMUNE, Feil.UKJENT))
     val felle = svar.felle?.ifBlank { null }
-    if (felle != null && felle != "nei" && felle !in FELLER) add(Feltfeil(Felt.FELLE, Feil.UKJENT))
+    when {
+      felle == null -> add(Feltfeil(Felt.FELLE, Feil.MANGLER))
+      felle != "nei" && felle !in FELLER -> add(Feltfeil(Felt.FELLE, Feil.UKJENT))
+    }
   }
 
   /**
