@@ -102,13 +102,13 @@ for (const app of APPER) {
      * Feltet i påmeldingsskjemaet er koblet av komponenten, ikke av serveren.
      *
      * Serveren sender bare struktur her: en ledetekst, et felt og en
-     * hjelpetekst, uten id-er og uten `for`. `<fs-field>` lager koblingen i
+     * hjelpetekst, uten id-er og uten `for`. `<lt-field>` lager koblingen i
      * nettleseren. Fram til Fristil 0.9.0 måtte malen liste opp attributtene
      * i `data-preserve-attr`, ellers rev morfingen dem bort. Nå reparerer
      * komponenten seg selv, og da må koblingen faktisk stå her.
      */
     const kobling = await side.evaluate(() => {
-      const felt = document.querySelector("fs-field")
+      const felt = document.querySelector("lt-field")
       const ledetekst = felt?.querySelector("label")
       const kontroll = felt?.querySelector("input")
       if (!ledetekst || !kontroll) return "fant ikke feltet"
@@ -117,7 +117,7 @@ for (const app of APPER) {
       for (const id of (kontroll.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean)) {
         if (!document.getElementById(id)) return `aria-describedby peker på #${id}, som ikke finnes`
       }
-      if (!ledetekst.classList.contains("fs-label")) return "ledeteksten mangler fs-label"
+      if (!ledetekst.classList.contains("lt-label")) return "ledeteksten mangler lt-label"
       return "ok"
     })
     if (kobling !== "ok") si(`påmeldingsfeltet: ${kobling}`)

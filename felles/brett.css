@@ -6,20 +6,20 @@
  * hvor boksene ligger. Hver app serverer denne fila på `/brett.css`.
  *
  * Regelen for hele demoen: alt du ser av knapper, felt, kort og tabeller er
- * Fristils egne komponenter. Det som skrives her er hvor boksene ligger, og
+ * LO-TEKs egne komponenter. Det som skrives her er hvor boksene ligger, og
  * topplinja, som er spillets eget ansikt og ikke noe designsystemet skal
  * eie.
  *
- * Verdiene er Fristils tokens, ikke egne tall. Unntakene er bredden på
+ * Verdiene er LO-TEKs tokens, ikke egne tall. Unntakene er bredden på
  * sidestammen og lengden på en tekstlinje, som er avgjørelser om denne
  * siden, og de tre fargene i topplinja under.
  */
 
 /*
- * Topplinja er mørkeblå i begge temaer. Fristils farger er roller som snur
+ * Topplinja er mørkeblå i begge temaer. LO-TEKs farger er roller som snur
  * med temaet, og fra 0.22 finnes det ingen palett med faste verdier å låne
  * fra. Verdiene er Skatteetatens denim-100, hvit og burgunder-30, slik de sto
- * i Fristils palett til og med 0.21.
+ * i LO-TEKs palett til og med 0.21.
  */
 :root {
   --spill-topp-flate: #2c436b;
@@ -29,27 +29,27 @@
 
 body {
   margin: 0;
-  /* Skriften kommer fra temaet, som setter `--fs-font-family-base`. Reserven er
-     her fordi Fristil arver skrift med vilje: uten et tema er det
+  /* Skriften kommer fra temaet, som setter `--lt-font-family-base`. Reserven er
+     her fordi LO-TEK arver skrift med vilje: uten et tema er det
      nettleserens egen, og den er en serif. */
   font-family: var(
-    --fs-font-family-base,
+    --lt-font-family-base,
     system-ui,
     -apple-system,
     "Segoe UI",
     Roboto,
     sans-serif
   );
-  color: var(--fs-color-neutral-text-strong);
+  color: var(--lt-color-neutral-text-strong);
   /* Flaten er sideflaten med et snev av tekstfargen i seg, slik at hvite
      kort løfter seg fra den. I mørkt tema snus det under. */
-  background: color-mix(in oklab, var(--fs-color-neutral-text-strong) 5%, var(--fs-color-neutral-canvas));
+  background: color-mix(in oklab, var(--lt-color-neutral-text-strong) 5%, var(--lt-color-neutral-canvas));
 }
 
 .stamme {
   max-width: 76rem;
   margin-inline: auto;
-  padding-inline: var(--fs-spacing-4);
+  padding-inline: var(--lt-spacing-4);
 }
 
 /* Topplinja
@@ -62,16 +62,16 @@ body {
 
 /* Sambandslinja legger seg øverst i vinduet når den først dukker opp.
    Uten dette dekker den navnet i topplinja. */
-body:has(.fs-connection-status__bar) .topplinje {
-  padding-block-start: var(--fs-spacing-10);
+body:has(.lt-connection-status__bar) .topplinje {
+  padding-block-start: var(--lt-spacing-10);
 }
 
 .topplinje__innhold {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--fs-spacing-3) var(--fs-spacing-5);
-  padding-block: var(--fs-spacing-3);
+  gap: var(--lt-spacing-3) var(--lt-spacing-5);
+  padding-block: var(--lt-spacing-3);
 }
 
 .topplinje__hoved {
@@ -79,19 +79,19 @@ body:has(.fs-connection-status__bar) .topplinje {
   flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--fs-spacing-3) var(--fs-spacing-5);
+  gap: var(--lt-spacing-3) var(--lt-spacing-5);
 }
 
 .topplinje__merke {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  gap: var(--fs-spacing-3);
+  gap: var(--lt-spacing-3);
 }
 
 .topplinje__emblem {
-  inline-size: var(--fs-spacing-8);
-  block-size: var(--fs-spacing-8);
+  inline-size: var(--lt-spacing-8);
+  block-size: var(--lt-spacing-8);
   flex: none;
 }
 
@@ -105,19 +105,19 @@ body:has(.fs-connection-status__bar) .topplinje {
   /* `<h1>` har egne marger fra nettleseren, og de skilte navnet fra
      etatsnavnet under. */
   margin: 0;
-  font-size: var(--fs-font-size-xl);
+  font-size: var(--lt-font-size-xl);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
 .topplinje__etat {
-  font-size: var(--fs-font-size-xs);
+  font-size: var(--lt-font-size-xs);
   color: color-mix(in oklab, var(--spill-topp-tekst) 75%, transparent);
 }
 
 .topplinje__fase {
   margin: 0;
-  font-size: var(--fs-font-size-m);
+  font-size: var(--lt-font-size-m);
   font-weight: 600;
 }
 
@@ -130,7 +130,7 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .topplinje__merkelapp {
-  font-size: var(--fs-font-size-xxs);
+  font-size: var(--lt-font-size-xxs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: color-mix(in oklab, var(--spill-topp-tekst) 75%, transparent);
@@ -146,8 +146,8 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 /* Inne i et kort står tallet på sidens egen flate, ikke på den mørkeblå. */
 .brett .nedtelling {
-  --spill-frist-start: var(--fs-color-neutral-text-strong);
-  --spill-frist-slutt: var(--fs-color-danger-text);
+  --spill-frist-start: var(--lt-color-neutral-text-strong);
+  --spill-frist-slutt: var(--lt-color-danger-text);
 }
 
 /*
@@ -178,7 +178,7 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .topplinje .nedtelling {
   color: var(--spill-frist-start);
-  font-size: var(--fs-font-size-mega);
+  font-size: var(--lt-font-size-mega);
   font-weight: 600;
   line-height: 1;
   /* Tallene skal ikke hoppe sidelengs mens sekundene går. */
@@ -189,51 +189,51 @@ body:has(.fs-connection-status__bar) .topplinje {
 .topplinje__meg {
   display: flex;
   align-items: center;
-  gap: var(--fs-spacing-2);
+  gap: var(--lt-spacing-2);
   margin: 0;
-  padding-inline-start: var(--fs-spacing-3);
+  padding-inline-start: var(--lt-spacing-3);
   border-inline-start: 1px solid color-mix(in oklab, var(--spill-topp-tekst) 30%, transparent);
-  font-size: var(--fs-font-size-s);
+  font-size: var(--lt-font-size-s);
 }
 
-.topplinje__meg .fs-avatar {
+.topplinje__meg .lt-avatar {
   color: var(--spill-topp-flate);
   background: var(--spill-topp-tekst);
 }
 
 .topplinje__stack {
-  padding: var(--fs-spacing-0-5) var(--fs-spacing-2);
-  font-size: var(--fs-font-size-xs);
+  padding: var(--lt-spacing-0-5) var(--lt-spacing-2);
+  font-size: var(--lt-font-size-xs);
   border: 1px solid color-mix(in oklab, var(--spill-topp-tekst) 45%, transparent);
-  border-radius: var(--fs-spacing-1);
+  border-radius: var(--lt-spacing-1);
 }
 
 /*
  * Temavelgeren står på den mørkeblå flata og må se ut deretter.
  *
- * Størrelsen settes med komponentvariablene, som er veien Fristil peker
+ * Størrelsen settes med komponentvariablene, som er veien LO-TEK peker
  * på. Fargene finnes det ingen variabler for, og skal ikke finnes: all
- * komponent-CSS ligger i `@layer fristil`, så appens egne regler vinner
+ * komponent-CSS ligger i `@layer lotek`, så appens egne regler vinner
  * uansett spesifisitet. Dette er den tilpasningen dokumentasjonen lover.
  */
 .temavelger {
-  --fs-toggle-group-height: var(--fs-spacing-8);
-  --fs-toggle-group-padding: 0 var(--fs-spacing-3);
+  --lt-toggle-group-height: var(--lt-spacing-8);
+  --lt-toggle-group-padding: 0 var(--lt-spacing-3);
   border-color: color-mix(in oklab, var(--spill-topp-tekst) 45%, transparent);
 }
 
-.temavelger .fs-toggle-group__option {
-  font-size: var(--fs-font-size-xs);
+.temavelger .lt-toggle-group__option {
+  font-size: var(--lt-font-size-xs);
   color: color-mix(in oklab, var(--spill-topp-tekst) 85%, transparent);
   background: transparent;
   border-inline-start-color: color-mix(in oklab, var(--spill-topp-tekst) 45%, transparent);
 }
 
-.temavelger .fs-toggle-group__option:hover {
+.temavelger .lt-toggle-group__option:hover {
   background: color-mix(in oklab, var(--spill-topp-tekst) 12%, transparent);
 }
 
-.temavelger .fs-toggle-group__option:has(input:checked) {
+.temavelger .lt-toggle-group__option:has(input:checked) {
   color: var(--spill-topp-flate);
   background: var(--spill-topp-tekst);
 }
@@ -245,14 +245,14 @@ body:has(.fs-connection-status__bar) .topplinje {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--fs-spacing-1);
-  font-size: var(--fs-font-size-xs);
+  gap: var(--lt-spacing-1);
+  font-size: var(--lt-font-size-xs);
 }
 
 .utgavevelger__lenke,
 .utgavevelger__her {
-  padding: var(--fs-spacing-0-5) var(--fs-spacing-2);
-  border-radius: var(--fs-spacing-1);
+  padding: var(--lt-spacing-0-5) var(--lt-spacing-2);
+  border-radius: var(--lt-spacing-1);
   border: 1px solid transparent;
 }
 
@@ -268,7 +268,7 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .utgavevelger__lenke:focus-visible {
-  outline: var(--fs-focus-ring);
+  outline: var(--lt-focus-ring);
   outline-color: var(--spill-topp-tekst);
   outline-offset: 2px;
 }
@@ -283,25 +283,25 @@ body:has(.fs-connection-status__bar) .topplinje {
    ------------------------------------------------------------------ */
 
 /* Toppen, fargen og luften mellom delene kommer fra dialogen selv:
-   `fs.dialog({ color: "brand" })` med en `header`-del. Her står bare bredden. */
+   `lt.dialog({ color: "brand" })` med en `header`-del. Her står bare bredden. */
 .velkomst {
-  --fs-dialog-width: min(38rem, 100%, calc(100vw - var(--fs-spacing-8)));
+  --lt-dialog-width: min(38rem, 100%, calc(100vw - var(--lt-spacing-8)));
 }
 
-.velkomst .fs-dialog__body {
+.velkomst .lt-dialog__body {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-3);
+  gap: var(--lt-spacing-3);
 }
 
-.velkomst .fs-dialog__body p { margin: 0; line-height: 1.6; }
+.velkomst .lt-dialog__body p { margin: 0; line-height: 1.6; }
 
-.velkomst__valg { margin: var(--fs-spacing-2) 0 0; }
+.velkomst__valg { margin: var(--lt-spacing-2) 0 0; }
 
 .velkomst__liste {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-2);
+  gap: var(--lt-spacing-2);
   margin: 0;
   padding: 0;
 }
@@ -311,59 +311,59 @@ body:has(.fs-connection-status__bar) .topplinje {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--fs-spacing-2);
-  padding: var(--fs-spacing-3) var(--fs-spacing-4);
-  border: 1px solid var(--fs-color-neutral-border-subtle);
-  border-radius: var(--fs-spacing-1);
-  color: var(--fs-color-neutral-text-strong);
+  gap: var(--lt-spacing-2);
+  padding: var(--lt-spacing-3) var(--lt-spacing-4);
+  border: 1px solid var(--lt-color-neutral-border-subtle);
+  border-radius: var(--lt-spacing-1);
+  color: var(--lt-color-neutral-text-strong);
   text-decoration: none;
 }
 
 .velkomst__lenke:hover {
-  border-color: var(--fs-color-accent-fill);
-  background: var(--fs-color-neutral-raised);
+  border-color: var(--lt-color-accent-fill);
+  background: var(--lt-color-neutral-raised);
 }
 
 .velkomst__lenke:focus-visible {
-  outline: var(--fs-focus-ring);
+  outline: var(--lt-focus-ring);
   outline-offset: 2px;
 }
 
-.velkomst__her { background: var(--fs-color-neutral-raised); }
+.velkomst__her { background: var(--lt-color-neutral-raised); }
 
 .velkomst__om {
   flex: 1 1 auto;
-  color: var(--fs-color-neutral-text-subtle);
-  font-size: var(--fs-font-size-s);
+  color: var(--lt-color-neutral-text-subtle);
+  font-size: var(--lt-font-size-s);
 }
 
 .velkomst__fotnote {
-  margin-block-start: var(--fs-spacing-2);
-  font-size: var(--fs-font-size-s);
-  color: var(--fs-color-neutral-text-subtle);
+  margin-block-start: var(--lt-spacing-2);
+  font-size: var(--lt-font-size-s);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 /* Brettet
    ------------------------------------------------------------------ */
 
 .brett {
-  padding-block: var(--fs-spacing-6) var(--fs-spacing-10);
+  padding-block: var(--lt-spacing-6) var(--lt-spacing-10);
 }
 
 .brett__innhold {
   display: grid;
   grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
-  gap: var(--fs-spacing-5);
+  gap: var(--lt-spacing-5);
   align-items: start;
 }
 
 .brett__hoved {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-5);
+  gap: var(--lt-spacing-5);
 }
 
-.kort { padding: var(--fs-spacing-5); }
+.kort { padding: var(--lt-spacing-5); }
 
 /* Saken
    ------------------------------------------------------------------ */
@@ -372,43 +372,43 @@ body:has(.fs-connection-status__bar) .topplinje {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--fs-spacing-3);
+  gap: var(--lt-spacing-3);
   margin: 0;
 }
 
 .sakskort__status {
-  font-size: var(--fs-font-size-xs);
+  font-size: var(--lt-font-size-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 .sakskort__tittel {
-  margin-block: var(--fs-spacing-1) 0;
+  margin-block: var(--lt-spacing-1) 0;
 }
 
 .sakskort__ingress {
   margin: 0;
-  font-size: var(--fs-font-size-l);
+  font-size: var(--lt-font-size-l);
   line-height: 1.5;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 .sakskort__faner {
   display: block;
-  margin-block-start: var(--fs-spacing-3);
+  margin-block-start: var(--lt-spacing-3);
 }
 
 .sakskort__tekst {
   max-width: 62ch;
   margin: 0;
-  font-size: var(--fs-font-size-m);
+  font-size: var(--lt-font-size-m);
   line-height: 1.7;
 }
 
 .sakskort__signatur {
-  margin-block: var(--fs-spacing-4) 0;
-  color: var(--fs-color-neutral-text-subtle);
+  margin-block: var(--lt-spacing-4) 0;
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 /* Vedtaket
@@ -416,21 +416,21 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .vedtakskort__ingress {
   margin: 0;
-  font-size: var(--fs-font-size-s);
-  color: var(--fs-color-neutral-text-subtle);
+  font-size: var(--lt-font-size-s);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
-/* Fristil setter ingen avstand utenpå komponentene, for det er sidens
+/* LO-TEK setter ingen avstand utenpå komponentene, for det er sidens
    avgjørelse. Her er avgjørelsen tatt. */
 .skjema {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-5);
-  margin-block-start: var(--fs-spacing-2);
+  gap: var(--lt-spacing-5);
+  margin-block-start: var(--lt-spacing-2);
 }
 
-.skjema fs-field,
-.skjema fs-suggestion {
+.skjema lt-field,
+.skjema lt-suggestion {
   display: block;
 }
 
@@ -440,14 +440,14 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 /* Hjelpen til hjemlene hører til feltet over, og skal stå på linje med
    feltene og ikke rykket inn av knappens eget innrykk. Innrykket er en
-   komponentvariabel, altså veien Fristil peker på for slikt. */
+   komponentvariabel, altså veien LO-TEK peker på for slikt. */
 .hjelpelenke {
   display: block;
-  margin-block-start: calc(var(--fs-spacing-4) * -1);
+  margin-block-start: calc(var(--lt-spacing-4) * -1);
 }
 
-.hjelpelenke .fs-button {
-  --fs-button-padding: var(--fs-spacing-1) 0;
+.hjelpelenke .lt-button {
+  --lt-button-padding: var(--lt-spacing-1) 0;
 }
 
 /* Kvitteringen
@@ -456,7 +456,7 @@ body:has(.fs-connection-status__bar) .topplinje {
 .kvittering {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-1);
+  gap: var(--lt-spacing-1);
   padding: 0;
   margin: 0;
   list-style: none;
@@ -464,28 +464,28 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .kvittering__linje {
   display: grid;
-  grid-template-columns: 1fr auto var(--fs-spacing-8);
-  gap: var(--fs-spacing-3);
+  grid-template-columns: 1fr auto var(--lt-spacing-8);
+  gap: var(--lt-spacing-3);
   align-items: baseline;
-  padding-block: var(--fs-spacing-2);
-  border-block-end: 1px solid var(--fs-color-neutral-border-subtle);
+  padding-block: var(--lt-spacing-2);
+  border-block-end: 1px solid var(--lt-color-neutral-border-subtle);
 }
 
 .kvittering__linje:last-child { border-block-end: 0; }
 
 .kvittering__dom {
   font-weight: 600;
-  color: var(--fs-color-danger-text);
+  color: var(--lt-color-danger-text);
 }
 
 .kvittering__linje[data-riktig="true"] .kvittering__dom {
-  color: var(--fs-color-success-text);
+  color: var(--lt-color-success-text);
 }
 
 .kvittering__verdt {
   font-variant-numeric: tabular-nums;
   text-align: end;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 /* Fasiten
@@ -496,33 +496,33 @@ body:has(.fs-connection-status__bar) .topplinje {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--fs-spacing-3);
+  gap: var(--lt-spacing-3);
 }
 
-.fasitkort__topp .fs-heading { margin: 0; }
+.fasitkort__topp .lt-heading { margin: 0; }
 
 .fasit {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-1);
+  gap: var(--lt-spacing-1);
   margin: 0;
 }
 
 .fasit__rad {
   display: grid;
   grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
-  gap: var(--fs-spacing-3);
-  padding-block: var(--fs-spacing-2);
-  border-block-end: 1px solid var(--fs-color-neutral-border-subtle);
+  gap: var(--lt-spacing-3);
+  padding-block: var(--lt-spacing-2);
+  border-block-end: 1px solid var(--lt-color-neutral-border-subtle);
 }
 
 .fasit__rad:last-child { border-block-end: 0; }
-.fasit dt { color: var(--fs-color-neutral-text-subtle); }
+.fasit dt { color: var(--lt-color-neutral-text-subtle); }
 .fasit dd { margin: 0; font-weight: 600; }
 
 .poeng {
   margin: 0;
-  font-size: var(--fs-font-size-l);
+  font-size: var(--lt-font-size-l);
 }
 
 /*
@@ -531,92 +531,92 @@ body:has(.fs-connection-status__bar) .topplinje {
  * En vakt er over på få minutter, og det eneste man sitter igjen med er hvor
  * det gikk. Da skal det stå med store bokstaver framfor å gjemmes i en rad i
  * en tabell. Medaljefargene følger Skatteetatens: oker for gull, grafitt for
- * sølv og burgunder for bronse. I Fristils matrise er det advarsel, nøytral
+ * sølv og burgunder for bronse. I LO-TEKs matrise er det advarsel, nøytral
  * og den tredje merkefargen, og de snur med temaet som resten av siden.
  */
 .plassering {
   display: flex;
   align-items: center;
-  gap: var(--fs-spacing-4);
-  margin-block: var(--fs-spacing-3) var(--fs-spacing-5);
+  gap: var(--lt-spacing-4);
+  margin-block: var(--lt-spacing-3) var(--lt-spacing-5);
 }
 
 .plassering__ord {
   margin: 0;
-  font-size: var(--fs-font-size-xxl);
-  font-weight: var(--fs-font-weight-bold);
-  line-height: var(--fs-line-height-heading);
+  font-size: var(--lt-font-size-xxl);
+  font-weight: var(--lt-font-weight-bold);
+  line-height: var(--lt-line-height-heading);
 }
 
 .plassering__linje {
   margin: 0;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 .medalje {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: var(--fs-spacing-6);
-  block-size: var(--fs-spacing-6);
+  inline-size: var(--lt-spacing-6);
+  block-size: var(--lt-spacing-6);
   border-radius: 50%;
-  font-size: var(--fs-font-size-s);
-  font-weight: var(--fs-font-weight-bold);
+  font-size: var(--lt-font-size-s);
+  font-weight: var(--lt-font-weight-bold);
   font-variant-numeric: tabular-nums;
-  background: var(--fs-color-neutral-raised);
-  color: var(--fs-color-neutral-text);
+  background: var(--lt-color-neutral-raised);
+  color: var(--lt-color-neutral-text);
 }
 
 .medalje--stor {
-  inline-size: var(--fs-spacing-12);
-  block-size: var(--fs-spacing-12);
-  font-size: var(--fs-font-size-xl);
+  inline-size: var(--lt-spacing-12);
+  block-size: var(--lt-spacing-12);
+  font-size: var(--lt-font-size-xl);
 }
 
 .medalje[data-plass="1"] {
-  background: var(--fs-color-warning-border-subtle);
-  color: var(--fs-color-warning-text-strong);
+  background: var(--lt-color-warning-border-subtle);
+  color: var(--lt-color-warning-text-strong);
 }
 
 .medalje[data-plass="2"] {
-  background: var(--fs-color-neutral-raised);
-  color: var(--fs-color-neutral-text-strong);
+  background: var(--lt-color-neutral-raised);
+  color: var(--lt-color-neutral-text-strong);
 }
 
 .medalje[data-plass="3"] {
-  background: var(--fs-color-brand3-border-subtle);
-  color: var(--fs-color-brand3-text-strong);
+  background: var(--lt-color-brand3-border-subtle);
+  color: var(--lt-color-brand3-text-strong);
 }
 
 /* «deg» står ved siden av navnet ditt i omgangens resultat. */
 .deg {
-  margin-inline-start: var(--fs-spacing-2);
-  padding: 0 var(--fs-spacing-2);
-  border-radius: var(--fs-spacing-4);
-  font-size: var(--fs-font-size-xs);
-  background: var(--fs-color-accent-surface);
-  color: var(--fs-color-accent-text);
+  margin-inline-start: var(--lt-spacing-2);
+  padding: 0 var(--lt-spacing-2);
+  border-radius: var(--lt-spacing-4);
+  font-size: var(--lt-font-size-xs);
+  background: var(--lt-color-accent-surface);
+  color: var(--lt-color-accent-text);
 }
 
 /* Resultatdialogen
    ------------------------------------------------------------------ */
 
 .resultat {
-  --fs-dialog-width: min(34rem, 100%, calc(100vw - var(--fs-spacing-8)));
+  --lt-dialog-width: min(34rem, 100%, calc(100vw - var(--lt-spacing-8)));
 }
 
-/* Utfallet står som et eget felt øverst, med dialogens egne farger:
+/* Resultatet står som et eget felt øverst, med dialogens egne farger:
    `data-color` på dialogen og en `header`-del rundt overskriften. */
 
-.resultat .fs-dialog__body {
+.resultat .lt-dialog__body {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-4);
+  gap: var(--lt-spacing-4);
 }
 
 .resultat__poeng {
   margin: 0;
-  font-size: var(--fs-font-size-xl);
+  font-size: var(--lt-font-size-xl);
   color: inherit;
 }
 
@@ -634,17 +634,17 @@ body:has(.fs-connection-status__bar) .topplinje {
 .resultat__rad {
   display: grid;
   grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) auto;
-  gap: var(--fs-spacing-1) var(--fs-spacing-3);
+  gap: var(--lt-spacing-1) var(--lt-spacing-3);
   align-items: baseline;
-  padding-block: var(--fs-spacing-2);
-  border-block-end: 1px solid var(--fs-color-neutral-border-subtle);
+  padding-block: var(--lt-spacing-2);
+  border-block-end: 1px solid var(--lt-color-neutral-border-subtle);
 }
 
 .resultat__rad:last-child { border-block-end: 0; }
 
 .resultat__felt {
   grid-column: 1;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 .resultat__ditt {
@@ -657,38 +657,38 @@ body:has(.fs-connection-status__bar) .topplinje {
   grid-column: 3;
   margin: 0;
   font-weight: 600;
-  color: var(--fs-color-danger-text);
+  color: var(--lt-color-danger-text);
 }
 
 .resultat__rad[data-riktig="true"] .resultat__dom {
-  color: var(--fs-color-success-text);
+  color: var(--lt-color-success-text);
 }
 
 .resultat__riktig {
   grid-column: 2 / -1;
   margin: 0;
-  font-size: var(--fs-font-size-s);
-  color: var(--fs-color-neutral-text-subtle);
+  font-size: var(--lt-font-size-s);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 /* Tavla
    ------------------------------------------------------------------ */
 
-.tavle__tabell { font-size: var(--fs-font-size-s); }
+.tavle__tabell { font-size: var(--lt-font-size-s); }
 
 .tavle__navn {
   display: flex;
   align-items: center;
-  gap: var(--fs-spacing-2);
+  gap: var(--lt-spacing-2);
 }
 
-.tavle__navn .fs-avatar { flex: none; }
+.tavle__navn .lt-avatar { flex: none; }
 
-.tavle__deg { color: var(--fs-color-neutral-text-subtle); }
+.tavle__deg { color: var(--lt-color-neutral-text-subtle); }
 
 /* Poengene fra runden som nettopp ble gjort opp, ved siden av totalen. */
 .tavle__runde {
-  color: var(--fs-color-success-text);
+  color: var(--lt-color-success-text);
   font-weight: 600;
 }
 
@@ -699,12 +699,12 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .vedtakskort__svart {
   margin: 0;
-  font-size: var(--fs-font-size-s);
-  color: var(--fs-color-neutral-text-subtle);
+  font-size: var(--lt-font-size-s);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 .vedtakskort__svart[data-alle="true"] {
-  color: var(--fs-color-success-text);
+  color: var(--lt-color-success-text);
   font-weight: 600;
 }
 .tavle__poeng { font-variant-numeric: tabular-nums; }
@@ -712,8 +712,8 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .tavle__fot {
   margin: 0;
-  font-size: var(--fs-font-size-xs);
-  color: var(--fs-color-neutral-text-subtle);
+  font-size: var(--lt-font-size-xs);
+  color: var(--lt-color-neutral-text-subtle);
 }
 
 /* Møt på vakt
@@ -721,19 +721,19 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .blimed { max-width: 34rem; }
 .blimed__ingress { margin: 0; line-height: 1.6; }
-.blimed form { display: flex; flex-direction: column; gap: var(--fs-spacing-4); }
-.blimed fs-field { display: block; }
+.blimed form { display: flex; flex-direction: column; gap: var(--lt-spacing-4); }
+.blimed lt-field { display: block; }
 
 /* Mørkt tema
    ------------------------------------------------------------------ */
 
 /*
  * Nettleserens egne flater, som rullefelt og nedtrekkslister, følger
- * systemet når spilleren ikke har valgt. Fristil satte `color-scheme` på
+ * systemet når spilleren ikke har valgt. LO-TEK satte `color-scheme` på
  * `:root` til og med 0.22, og nå bare der `data-theme` står. Uten linja
  * under får en mørk maskin lyse rullefelt på en mørk side.
  *
- * `:not([data-theme])` og ikke bare `:root`: regelen står utenfor Fristils
+ * `:not([data-theme])` og ikke bare `:root`: regelen står utenfor LO-TEKs
  * lag og ville slått pakkens `color-scheme: dark` når spilleren har valgt.
  */
 :root:not([data-theme]) {
@@ -745,7 +745,7 @@ body:has(.fs-connection-status__bar) .topplinje {
  * løftes. Samme regel begge veier ville gitt kort som er mørkere enn
  * siden.
  *
- * Reglene står to ganger, med de samme selektorene Fristil bruker:
+ * Reglene står to ganger, med de samme selektorene LO-TEK bruker:
  * mediespørringen gjelder når spilleren ikke har valgt noe, og
  * `[data-theme]` når hun har. Bare mediespørringen ville gjort velgeren
  * halvvirksom: et mørkt valg på en lys maskin ville snudd tokenene uten å
@@ -753,22 +753,22 @@ body:has(.fs-connection-status__bar) .topplinje {
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) body {
-    background: var(--fs-color-neutral-canvas);
+    background: var(--lt-color-neutral-canvas);
   }
 
-  :root:not([data-theme="light"]) .fs-card {
-    background: color-mix(in oklab, var(--fs-color-neutral-text-strong) 8%, var(--fs-color-neutral-canvas));
-    border-color: color-mix(in oklab, var(--fs-color-neutral-text-strong) 18%, transparent);
+  :root:not([data-theme="light"]) .lt-card {
+    background: color-mix(in oklab, var(--lt-color-neutral-text-strong) 8%, var(--lt-color-neutral-canvas));
+    border-color: color-mix(in oklab, var(--lt-color-neutral-text-strong) 18%, transparent);
   }
 }
 
 [data-theme="dark"] body {
-  background: var(--fs-color-neutral-canvas);
+  background: var(--lt-color-neutral-canvas);
 }
 
-[data-theme="dark"] .fs-card {
-  background: color-mix(in oklab, var(--fs-color-neutral-text-strong) 8%, var(--fs-color-neutral-canvas));
-  border-color: color-mix(in oklab, var(--fs-color-neutral-text-strong) 18%, transparent);
+[data-theme="dark"] .lt-card {
+  background: color-mix(in oklab, var(--lt-color-neutral-text-strong) 8%, var(--lt-color-neutral-canvas));
+  border-color: color-mix(in oklab, var(--lt-color-neutral-text-strong) 18%, transparent);
 }
 
 @media (max-width: 900px) {
@@ -794,7 +794,7 @@ body:has(.fs-connection-status__bar) .topplinje {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: var(--fs-spacing-2) var(--fs-spacing-4);
+    gap: var(--lt-spacing-2) var(--lt-spacing-4);
   }
 
   .topplinje__merke { grid-column: 1 / -1; }
@@ -803,7 +803,7 @@ body:has(.fs-connection-status__bar) .topplinje {
     flex-direction: row;
     align-items: baseline;
     justify-content: flex-end;
-    gap: var(--fs-spacing-2);
+    gap: var(--lt-spacing-2);
   }
 
   .topplinje__stack,
@@ -819,18 +819,18 @@ body:has(.fs-connection-status__bar) .topplinje {
   .topplinje__stack { justify-self: start; }
   .topplinje__meg { justify-self: end; }
 
-  .topplinje .nedtelling { font-size: var(--fs-font-size-xl); }
+  .topplinje .nedtelling { font-size: var(--lt-font-size-xl); }
 }
 
 @media (max-width: 560px) {
-  .kort { padding: var(--fs-spacing-4); }
+  .kort { padding: var(--lt-spacing-4); }
 
   /*
    * Avataren i tavla er pynt, og den tar plassen fra navnet. På 375 piksler
    * ble «Mobil astro (deg)» brutt over tre linjer, med initialene ved siden
    * av. Den er `aria-hidden`, så ingen mister noe på at den skjules her.
    */
-  .tavle__navn .fs-avatar { display: none; }
+  .tavle__navn .lt-avatar { display: none; }
   .tavle__navn { gap: 0; }
 
   .resultat__rad {
@@ -858,14 +858,14 @@ body:has(.fs-connection-status__bar) .topplinje {
  */
 .panelvert {
   position: fixed;
-  inset-block-end: var(--fs-spacing-4);
-  inset-inline-end: var(--fs-spacing-4);
+  inset-block-end: var(--lt-spacing-4);
+  inset-inline-end: var(--lt-spacing-4);
   z-index: 40;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: var(--fs-spacing-2);
-  max-inline-size: min(56rem, calc(100vw - var(--fs-spacing-8)));
+  gap: var(--lt-spacing-2);
+  max-inline-size: min(56rem, calc(100vw - var(--lt-spacing-8)));
 }
 
 .panelknapp {
@@ -880,10 +880,10 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 /*
- * Panelet er et kort, og arver flate, kant og hjørner av `.fs-card`. Det sto
+ * Panelet er et kort, og arver flate, kant og hjørner av `.lt-card`. Det sto
  * en gang `var(--semantic-surface-background)` her, et token som ikke finnes,
  * så regelen var ugyldig og panelet var gjennomsiktig: sidens tekst slo
- * gjennom loggen. Mørkt tema har alt en regel for `.fs-card` lenger nede.
+ * gjennom loggen. Mørkt tema har alt en regel for `.lt-card` lenger nede.
  *
  * Nyttelasten står i sin egen spalte og fyller høyden. Før delte den bredden
  * med loggen og fikk ti rader, så det som faktisk kom over ledningen måtte
@@ -899,8 +899,8 @@ body:has(.fs-connection-status__bar) .topplinje {
   grid-template-areas:
     "hva logg"
     "hva hvordan";
-  gap: var(--fs-spacing-4);
-  inline-size: min(56rem, calc(100vw - var(--fs-spacing-8)));
+  gap: var(--lt-spacing-4);
+  inline-size: min(56rem, calc(100vw - var(--lt-spacing-8)));
   /* Bestemt høyde og ikke bare et tak: en `1fr`-rad regnes mot en høyde som
      er kjent, og med `max-block-size` alene ble raden like høy som innholdet
      sitt. Nyttelasten ble da 768 piksler i et panel på 512, og rant ut. */
@@ -927,7 +927,7 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .panel__tittel {
-  margin-block-end: var(--fs-spacing-1);
+  margin-block-end: var(--lt-spacing-1);
 }
 
 /*
@@ -938,9 +938,9 @@ body:has(.fs-connection-status__bar) .topplinje {
  * for. Den står derfor her, i den delte fila, og ikke tre steder.
  */
 .panel__hjelp {
-  margin-inline-start: var(--fs-spacing-2);
-  padding: 0 var(--fs-spacing-2);
-  font-size: var(--fs-font-size-xs);
+  margin-inline-start: var(--lt-spacing-2);
+  padding: 0 var(--lt-spacing-2);
+  font-size: var(--lt-font-size-xs);
   vertical-align: middle;
 }
 
@@ -951,7 +951,7 @@ body:has(.fs-connection-status__bar) .topplinje {
   min-block-size: 0;
   max-block-size: 17rem;
   overflow: auto;
-  margin-block-end: var(--fs-spacing-3);
+  margin-block-end: var(--lt-spacing-3);
 }
 
 .panel__utgaver[hidden] {
@@ -959,19 +959,19 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .panel__tabell {
-  font-size: var(--fs-font-size-xs);
+  font-size: var(--lt-font-size-xs);
 }
 
 .panel__tabell tr[aria-current="true"] {
-  background: var(--fs-color-accent-surface);
-  color: var(--fs-color-accent-text);
+  background: var(--lt-color-accent-surface);
+  color: var(--lt-color-accent-text);
 }
 
-/* Lenkene i utgavetabellen peker på koden bak hver utgave. `.fs-link` ville
+/* Lenkene i utgavetabellen peker på koden bak hver utgave. `.lt-link` ville
    vært det opplagte valget, men stilarket lastes ikke i alle tre appene, og
    panelet skal se likt ut i alle tre. */
 .panel__lenke {
-  color: var(--fs-color-accent-text);
+  color: var(--lt-color-accent-text);
   text-underline-offset: 2px;
 }
 
@@ -980,42 +980,42 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .panel__lenke:focus-visible {
-  outline: var(--fs-focus-ring);
+  outline: var(--lt-focus-ring);
   outline-offset: 2px;
-  border-radius: var(--fs-spacing-1);
+  border-radius: var(--lt-spacing-1);
 }
 
 .panel__her {
-  font-weight: var(--fs-font-weight-regular, 400);
+  font-weight: var(--lt-font-weight-regular, 400);
   white-space: nowrap;
 }
 
 .panel__felles {
-  margin-block-start: var(--fs-spacing-2);
-  font-size: var(--fs-font-size-xs);
+  margin-block-start: var(--lt-spacing-2);
+  font-size: var(--lt-font-size-xs);
 }
 
 /* Merkelappen er svaret på «med hva», og skal leses før innholdet. */
 .panel__merkelapp {
-  margin-block-end: var(--fs-spacing-2);
+  margin-block-end: var(--lt-spacing-2);
   font-family: var(--font-family-mono, ui-monospace, monospace);
-  font-size: var(--fs-font-size-xs);
+  font-size: var(--lt-font-size-xs);
   font-weight: 600;
-  color: var(--fs-color-accent-text);
+  color: var(--lt-color-accent-text);
 }
 
 .panel__logg {
   display: flex;
   flex-direction: column;
-  gap: var(--fs-spacing-1);
-  font-size: var(--fs-font-size-s);
+  gap: var(--lt-spacing-1);
+  font-size: var(--lt-font-size-s);
 }
 
 .panel__linje {
   display: flex;
   flex-direction: column;
-  padding: var(--fs-spacing-1);
-  border-radius: var(--fs-spacing-1);
+  padding: var(--lt-spacing-1);
+  border-radius: var(--lt-spacing-1);
 }
 
 /* Bare linjene med en nyttelast kan velges, og bare de skal se klikkbare ut. */
@@ -1024,16 +1024,16 @@ body:has(.fs-connection-status__bar) .topplinje {
 }
 
 .panel__linje[data-hendelse]:hover {
-  background: var(--fs-color-accent-surface);
+  background: var(--lt-color-accent-surface);
 }
 
 /* Den som er vist i nyttelastruta, og den nyeste, skal skille seg ut. */
 .panel__linje[aria-current="true"] {
-  background: var(--fs-color-accent-surface);
-  color: var(--fs-color-accent-text);
+  background: var(--lt-color-accent-surface);
+  color: var(--lt-color-accent-text);
 }
 
-/* Merkelappen arver fargen på den valgte raden. Med tokenene før Fristil
+/* Merkelappen arver fargen på den valgte raden. Med tokenene før LO-TEK
    0.22 ble den dempede fargen 3,45:1 mot den lyse flaten, under kravet på
    4,5:1. Matrisen holder kravet, men raden står fortsatt i én farge. */
 .panel__linje[aria-current="true"] .panel__linjelapp,
@@ -1047,8 +1047,8 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .panel__linjelapp {
   font-family: var(--font-family-mono, ui-monospace, monospace);
-  font-size: var(--fs-font-size-xs);
-  color: var(--fs-color-neutral-text-subtle, inherit);
+  font-size: var(--lt-font-size-xs);
+  color: var(--lt-color-neutral-text-subtle, inherit);
 }
 
 .panel__teknikk {
@@ -1060,15 +1060,15 @@ body:has(.fs-connection-status__bar) .topplinje {
   min-block-size: 8rem;
   overflow: auto;
   margin: 0;
-  padding: var(--fs-spacing-2);
+  padding: var(--lt-spacing-2);
   font-family: var(--font-family-mono, ui-monospace, monospace);
-  font-size: var(--fs-font-size-xs);
+  font-size: var(--lt-font-size-xs);
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  background: var(--fs-color-neutral-canvas);
-  border: 1px solid var(--fs-color-neutral-border-subtle);
-  border-radius: var(--fs-spacing-1);
+  background: var(--lt-color-neutral-canvas);
+  border: 1px solid var(--lt-color-neutral-border-subtle);
+  border-radius: var(--lt-spacing-1);
 }
 
 /*
@@ -1078,21 +1078,21 @@ body:has(.fs-connection-status__bar) .topplinje {
  * hver gang noe oppdaterte seg, og da er det ikke lenger det samme brettet.
  *
  * Fargene sto en gang som `--semantic-info-*`, og de tokenene finnes ikke i
- * Fristil. En ugyldig `var()` gjør hele regelen ugyldig, så `outline` ble
- * `none` og markeringen tegnet aldri noe. Fristil har ingen «info»-status,
- * og det som er framhevet og aktivt er aksentfamilien, `--fs-color-accent-*`.
+ * LO-TEK. En ugyldig `var()` gjør hele regelen ugyldig, så `outline` ble
+ * `none` og markeringen tegnet aldri noe. LO-TEK har ingen «info»-status,
+ * og det som er framhevet og aktivt er aksentfamilien, `--lt-color-accent-*`.
  */
 .panel-lyser {
-  outline: 2px solid var(--fs-color-accent-fill);
+  outline: 2px solid var(--lt-color-accent-fill);
   outline-offset: 2px;
-  border-radius: var(--fs-spacing-1);
+  border-radius: var(--lt-spacing-1);
   animation: panel-puls 1.2s ease-out;
 }
 
 @keyframes panel-puls {
   from {
-    outline-color: var(--fs-color-accent-fill);
-    background-color: var(--fs-color-accent-surface);
+    outline-color: var(--lt-color-accent-fill);
+    background-color: var(--lt-color-accent-surface);
   }
   to {
     outline-color: transparent;
@@ -1144,7 +1144,7 @@ body:has(.fs-connection-status__bar) .topplinje {
   }
 
   .panelvert {
-    inset-inline: var(--fs-spacing-3);
+    inset-inline: var(--lt-spacing-3);
     align-items: stretch;
   }
 }
@@ -1163,5 +1163,5 @@ body:has(.fs-connection-status__bar) .topplinje {
 
 .hjemmelhjelp__om {
   display: block;
-  color: var(--fs-color-neutral-text-subtle);
+  color: var(--lt-color-neutral-text-subtle);
 }

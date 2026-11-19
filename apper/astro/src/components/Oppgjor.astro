@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { feltnavn, stor } from "../lib/tekst"
 import type { TavleRad, Tilstand } from "../lib/tilstand"
@@ -40,8 +40,8 @@ const flytting =
         ? `Du falt fra ${meg.forrigePlass}. til ${meg.plass}. plass.`
         : `Du holder ${meg.plass}. plass.`
 
-const { class: kortKlasse, ...kort } = fs.card()
-const { class: merknadKlasse, ...merknad } = fs.alert({ color: "success" })
+const { class: kortKlasse, ...kort } = lt.card()
+const { class: merknadKlasse, ...merknad } = lt.alert({ color: "success" })
 ---
 
 {
@@ -57,8 +57,8 @@ const { class: merknadKlasse, ...merknad } = fs.alert({ color: "success" })
 
       <section {...kort} class={`${kortKlasse} kort fasitkort`}>
         <div class="fasitkort__topp">
-          <h2 {...fs.heading({ size: "s" })}>Fasit</h2>
-          <button {...fs.button({ variant: "secondary" })} type="button" data-apne-resultat>
+          <h2 {...lt.heading({ size: "s" })}>Fasit</h2>
+          <button {...lt.button({ variant: "secondary" })} type="button" data-apne-resultat>
             Se resultatet
           </button>
         </div>
@@ -82,7 +82,7 @@ const { class: merknadKlasse, ...merknad } = fs.alert({ color: "success" })
           </div>
         </dl>
 
-        <div {...fs.alert({ color: "info" })}>
+        <div {...lt.alert({ color: "info" })}>
           <p>{tilstand.forklaring ?? ""}</p>
         </div>
 

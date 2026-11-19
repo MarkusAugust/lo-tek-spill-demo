@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { appnavn, farge } from "../lib/tekst"
 import type { Tilstand } from "../lib/tilstand"
@@ -42,11 +42,11 @@ function plasseringslinje(
 const { tilstand } = Astro.props
 const meg = tilstand.meg
 const mulige = tilstand.poeng.fullPott * tilstand.runderTotalt
-const { class: kortKlasse, ...kort } = fs.card()
+const { class: kortKlasse, ...kort } = lt.card()
 ---
 
 <section {...kort} class={`${kortKlasse} kort sluttkort`}>
-  <h2 {...fs.heading({ size: "m" })}>Vakta er over</h2>
+  <h2 {...lt.heading({ size: "m" })}>Vakta er over</h2>
 
   {
     meg && (
@@ -64,9 +64,9 @@ const { class: kortKlasse, ...kort } = fs.card()
     )
   }
 
-  <h3 {...fs.heading({ size: "xs" })}>Omgangens resultat</h3>
-  <div class={fs.table.scroll} tabindex="0">
-    <table {...fs.table()}>
+  <h3 {...lt.heading({ size: "xs" })} id="slutt-omgangen">Omgangens resultat</h3>
+  <div class={lt.table.scroll} tabindex="0">
+    <table {...lt.table()} aria-labelledby="slutt-omgangen">
       <thead>
         <tr><th>#</th><th>Navn</th><th>Poeng</th><th>App</th></tr>
       </thead>
@@ -83,7 +83,7 @@ const { class: kortKlasse, ...kort } = fs.card()
                 <td>{rad.navn}{rad.erMeg && <span class="deg">deg</span>}</td>
                 <td>{rad.poeng}</td>
                 <td>
-                  <span {...fs.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
+                  <span {...lt.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
                 </td>
               </tr>
             ))
@@ -93,15 +93,15 @@ const { class: kortKlasse, ...kort } = fs.card()
     </table>
   </div>
 
-  <p {...fs.paragraph()}>
+  <p {...lt.paragraph()}>
     Ny omgang starter om <span class="nedtelling" data-nedtelling>{
       Math.max(0, Math.round((tilstand.fristMs - tilstand.naMs) / 1000))
     }</span> sekunder.
   </p>
 
-  <h3 {...fs.heading({ size: "xs" })}>Evig toppliste</h3>
-  <div class={fs.table.scroll} tabindex="0">
-    <table {...fs.table()}>
+  <h3 {...lt.heading({ size: "xs" })} id="slutt-toppliste">Evig toppliste</h3>
+  <div class={lt.table.scroll} tabindex="0">
+    <table {...lt.table()} aria-labelledby="slutt-toppliste">
       <thead>
         <tr><th>#</th><th>Navn</th><th>Poeng</th><th>App</th></tr>
       </thead>
@@ -116,7 +116,7 @@ const { class: kortKlasse, ...kort } = fs.card()
                 <td>{rad.navn}</td>
                 <td>{rad.poeng}</td>
                 <td>
-                  <span {...fs.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
+                  <span {...lt.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
                 </td>
               </tr>
             ))

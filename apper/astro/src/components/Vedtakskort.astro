@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import type { Feil, Tilstand } from "../lib/tilstand"
 
@@ -20,31 +20,31 @@ const feilPa = (felt: string) => feil.find((f) => f.felt === felt)
  * kvittering, eller den samme siden med feiloppsummeringen øverst. Ingen av
  * delene trenger JavaScript, og det er nettopp poenget med denne utgaven.
  *
- * Kommunefeltet er det eneste som blir bedre av skript: `<fs-suggestion>`
+ * Kommunefeltet er det eneste som blir bedre av skript: `<lt-suggestion>`
  * filtrerer lista og tar piltastene. Serveren sender hele lista, og uten
  * komponenten er feltet fortsatt et tekstfelt med en liste under.
  */
-const { class: kortKlasse, ...kort } = fs.card()
-const tittel = fs.heading({ size: "s" })
-const boks = fs.errorSummary({ count: feil.length, id: "feilboks" })
+const { class: kortKlasse, ...kort } = lt.card()
+const tittel = lt.heading({ size: "s" })
+const boks = lt.errorSummary({ count: feil.length, id: "feilboks" })
 // `hidden` skrives bokstavelig: Astro sprer `true` som `hidden="true"` på et
 // egendefinert element, og det er feil form for et boolsk attributt.
 const { hidden: skjult, ...feilboks } = boks.host
-const { class: knappKlasse, ...knapp } = fs.button()
-const utfall = fs.fieldset({ state: feilPa("v-innvilget") ? "invalid" : undefined })
-const forslag = fs.suggestion({
+const { class: knappKlasse, ...knapp } = lt.button()
+const utfall = lt.fieldset({ state: feilPa("v-innvilget") ? "invalid" : undefined })
+const forslag = lt.suggestion({
   id: "kommune",
-  count: kommuner.length,
+  keys: kommuner,
   help: true,
   error: Boolean(feilPa("kommune")),
   invalid: Boolean(feilPa("kommune")),
 })
 /* Sprettoppvinduet med hjemlene. Ett kall, tre attributtsett: verten,
    knappen og panelet hører sammen og deler id. */
-const hjelp = fs.popover({ id: "hjemmelhjelp" })
-// Klassen trekkes ut: `{...fs.list()} class="…"` gir to class-attributter, og
+const hjelp = lt.popover({ id: "hjemmelhjelp" })
+// Klassen trekkes ut: `{...lt.list()} class="…"` gir to class-attributter, og
 // nettleseren beholder det første.
-const { class: listeKlasse, ...liste } = fs.list()
+const { class: listeKlasse, ...liste } = lt.list()
 const feller = [
   ["nei", "Nei, saken er i orden"],
   ["fodselsdato", "Fødselsdatoen"],
@@ -59,48 +59,52 @@ const feller = [
     Fire spørsmål, {tilstand.poeng.fullPott} poeng. Du kan svare én gang.
   </p>
 
-  <fs-error-summary {...feilboks} hidden={skjult ? "" : undefined}>
+  <lt-error-summary {...feilboks} hidden={skjult ? "" : undefined}>
     {
       feil.length > 0 && (
         <>
           <h3 {...boks.title}>Du må rette {feil.length} feil</h3>
-          <ul {...fs.list()}>
+          <ul {...lt.list()}>
+            {/* En avvisning uten felt har ikke noe å lenke til. */}
             {feil.map((f) => (
-              <li><a href={`#${f.felt}`}>{f.melding}</a></li>
+              <li>{f.felt ? <a href={`#${f.felt}`}>{f.melding}</a> : f.melding}</li>
             ))}
           </ul>
         </>
       )
     }
-  </fs-error-summary>
+  </lt-error-summary>
 
   <form class="skjema" method="post" action="/">
+    <!-- Saken skjemaet ble tegnet for. Sendes det inn etter at saken byttet,
+         avviser spilltjeneren svaret i stedet for å legge det på den nye. -->
+    <input type="hidden" name="sakId" value={tilstand.sak.id} />
     <fieldset {...utfall}>
-      <legend {...fs.legend()}>Utfall</legend>
+      <legend {...lt.legend()}>Utfall</legend>
       {
         [
           ["innvilget", "Innvilget", "v-innvilget"],
           ["avslatt", "Avslått", "v-avslatt"],
         ].map(([verdi, tekst, id]) => (
-          <div class={fs.radio.row}>
+          <div class={lt.radio.row}>
             <input
-              {...fs.radio({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
+              {...lt.radio({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
               type="radio"
               id={id}
               name="vedtak"
               value={verdi}
               checked={svar.vedtak === verdi}
             />
-            <label {...fs.label()} for={id}>{tekst}</label>
+            <label {...lt.label()} for={id}>{tekst}</label>
           </div>
         ))
       }
     </fieldset>
 
-    <fs-field>
-      <label {...fs.label()} for="hjemmel">Hjemmel</label>
+    <lt-field>
+      <label {...lt.label()} for="hjemmel">Hjemmel</label>
       <select
-        {...fs.select({
+        {...lt.select({
           picker: "styled",
           state: feilPa("hjemmel") ? "invalid" : undefined,
         })}
@@ -117,11 +121,11 @@ const feller = [
           ))
         }
       </select>
-      {feilPa("hjemmel") && <p {...fs.errorText()} id="hjemmel-feil">{feilPa("hjemmel")!.melding}</p>}
-    </fs-field>
+      {feilPa("hjemmel") && <p {...lt.errorText()} id="hjemmel-feil">{feilPa("hjemmel")!.melding}</p>}
+    </lt-field>
 
-    <fs-popover {...hjelp.host} class="hjelpelenke" placement="bottom-start">
-      <button {...hjelp.trigger} {...fs.button({ variant: "ghost" })} type="button">
+    <lt-popover {...hjelp.host} class="hjelpelenke" placement="bottom-start">
+      <button {...hjelp.trigger} {...lt.button({ variant: "ghost" })} type="button">
         Hva betyr hjemlene?
       </button>
       <div {...hjelp.panel}>
@@ -134,28 +138,27 @@ const feller = [
           ))}
         </ul>
       </div>
-    </fs-popover>
+    </lt-popover>
 
-    <fs-suggestion class="kommunefelt">
+    <!-- Antallet leses opp på norsk: standardtekstene i LO-TEK er engelske. -->
+    <lt-suggestion class="kommunefelt" count-none="Ingen treff" count-one="Ett treff" count-other="{n} treff">
       <label {...forslag.label}>Bekreft kommunen søkeren hører til</label>
-      <div {...forslag.field}>
-        <input {...forslag.control} name="kommune" value={svar.kommune} />
-        <ul {...forslag.list}>
-          {kommuner.map((navn, i) => <li {...forslag.options[i]}>{navn}</li>)}
-        </ul>
-        <p {...forslag.empty}>Ingen treff. Finnes kommunen fortsatt?</p>
-        <span {...forslag.status}></span>
-      </div>
-      <p {...fs.helpText()} {...forslag.help}>
+      <input {...forslag.control} name="kommune" value={svar.kommune} />
+      <ul {...forslag.list}>
+        {kommuner.map((navn, i) => <li {...forslag.options[i]}>{navn}</li>)}
+      </ul>
+      <p {...forslag.empty}>Ingen treff. Finnes kommunen fortsatt?</p>
+      <span {...forslag.status}></span>
+      <p {...lt.helpText()} {...forslag.help}>
         Begynn å skrive, så kommer forslagene. Finner du den ikke, la feltet stå tomt.
       </p>
-      {feilPa("kommune") && <p {...fs.errorText()} {...forslag.error}>{feilPa("kommune")!.melding}</p>}
-    </fs-suggestion>
+      {feilPa("kommune") && <p {...lt.errorText()} {...forslag.error}>{feilPa("kommune")!.melding}</p>}
+    </lt-suggestion>
 
-    <fs-field>
-      <label {...fs.label()} for="felle">Er noe feil i søknaden?</label>
+    <lt-field>
+      <label {...lt.label()} for="felle">Er noe feil i søknaden?</label>
       <select
-        {...fs.select({ picker: "styled", state: feilPa("felle") ? "invalid" : undefined })}
+        {...lt.select({ picker: "styled", state: feilPa("felle") ? "invalid" : undefined })}
         id="felle"
         name="felle"
         aria-describedby={`felle-hjelp${feilPa("felle") ? " felle-feil" : ""}`}
@@ -167,9 +170,9 @@ const feller = [
           ))
         }
       </select>
-      <p {...fs.helpText()} id="felle-hjelp">Å se at alt er i orden teller like mye.</p>
-      {feilPa("felle") && <p {...fs.errorText()} id="felle-feil">{feilPa("felle")!.melding}</p>}
-    </fs-field>
+      <p {...lt.helpText()} id="felle-hjelp">Å se at alt er i orden teller like mye.</p>
+      {feilPa("felle") && <p {...lt.errorText()} id="felle-feil">{feilPa("felle")!.melding}</p>}
+    </lt-field>
 
     <button {...knapp} class={`${knappKlasse} skjema__send`} type="submit">
       Fatt vedtak

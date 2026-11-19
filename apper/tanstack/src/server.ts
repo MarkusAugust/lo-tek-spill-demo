@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs"
 
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server"
 
+import { settKapsel, slettGammelForm, slettKapsel } from "./kapsel"
 import { KOMMUNER } from "./kommuner"
 import { KAPSEL, bliMed, erTest, gaAv, pulsen, svarInn, tilstand } from "./spilltjener"
 import type { Skjermbilde } from "./tilstand"
-import { valider } from "./validering"
+import { feilFraAvvisning, valider } from "./validering"
 
 /**
  * Appserveren.
@@ -29,9 +30,9 @@ const BRETT_CSS: string = readFileSync(
 )
 
 /**
- * Temaet, generert av Fristil av `felles/fristil.tema.json`.
+ * Temaet, generert av LO-TEK av `felles/lotek.theme.json`.
  *
- * Det setter skrift og form, og lar fargene stå: Fristils egen palett er
+ * Det setter skrift og form, og lar fargene stå: LO-TEKs egen palett er
  * allerede Skatteetatens, med de samme verdiene.
  */
 const TEMA_CSS: string = readFileSync(
@@ -56,24 +57,6 @@ const PANEL_AVLYTT_JS: string = readFileSync(
   process.env.PANEL_AVLYTT_JS_FIL ?? "../../felles/panel-avlytt.js",
   "utf8",
 )
-
-/**
- * Hvordan kapselen skal merkes.
- *
- * `SameSite=Lax` er riktig når appen står alene, men skallet viser de tre
- * utgavene i hver sin ramme, og i drift ligger de på hvert sitt domene. Da
- * er kapselen en tredjepartskapsel, og `Lax` gjør at nettleseren aldri
- * sender den: du kunne se spillet i rammen, men ikke melde deg på.
- * `None` krever `Secure`, altså https, og det har vi bare i drift. Lokalt
- * er alle tre på `localhost`, som er samme nettsted uansett portnummer, og
- * der holder `Lax`.
- */
-function kapselTvers(request: Request): string {
-  const https =
-    request.headers.get("x-forwarded-proto") === "https" ||
-    new URL(request.url).protocol === "https:"
-  return https ? "SameSite=None; Secure" : "SameSite=Lax"
-}
 
 function kapsel(request: Request, navn: string): string | null {
   const rad = request.headers.get("cookie")
@@ -165,13 +148,13 @@ export default {
     const billett = url.pathname === "/" ? url.searchParams.get("spiller") : null
     if (billett) {
       const tema = url.searchParams.get("tema")
+      // Den gamle formen slettes først, så den ikke leses i stedet for den nye.
       const kapsler = [
-        `${KAPSEL}=${billett}; Path=/; Max-Age=${8 * 60 * 60}; HttpOnly; ${kapselTvers(request)}`,
+        slettGammelForm(KAPSEL),
+        settKapsel(KAPSEL, billett, 8 * 60 * 60, { httpOnly: true }),
       ]
       if (tema === "light" || tema === "dark") {
-        kapsler.push(
-          `${KAPSEL_TEMA}=${tema}; Path=/; Max-Age=${60 * 60 * 24 * 365}; ${kapselTvers(request)}`,
-        )
+        kapsler.push(slettGammelForm(KAPSEL_TEMA), settKapsel(KAPSEL_TEMA, tema, 60 * 60 * 24 * 365))
       }
       const hoder = new Headers({ location: "/" })
       for (const k of kapsler) hoder.append("set-cookie", k)
@@ -214,13 +197,10 @@ export default {
 
       // Kapsel og ikke minne i nettleseren: Astro-appen laster hele sider på
       // nytt, og alle tre skal oppføre seg likt.
-      return new Response(null, {
-        status: 303,
-        headers: {
-          location: "/",
-          "set-cookie": `${KAPSEL}=${spiller.spillerId}; Path=/; Max-Age=${8 * 60 * 60}; HttpOnly; ${kapselTvers(request)}`,
-        },
-      })
+      const hoder = new Headers({ location: "/" })
+      hoder.append("set-cookie", slettGammelForm(KAPSEL))
+      hoder.append("set-cookie", settKapsel(KAPSEL, spiller.spillerId, 8 * 60 * 60, { httpOnly: true }))
+      return new Response(null, { status: 303, headers: hoder })
     }
 
     /*
@@ -232,9 +212,9 @@ export default {
     if (url.pathname === "/ga-av" && request.method === "POST") {
       const spillerId = kapsel(request, KAPSEL)
       if (spillerId) await gaAv(spillerId).catch(() => {})
-      return new Response("ok", {
-        headers: { "set-cookie": `${KAPSEL}=; Path=/; Max-Age=0` },
-      })
+      const hoder = new Headers()
+      for (const k of slettKapsel(KAPSEL)) hoder.append("set-cookie", k)
+      return new Response("ok", { headers: hoder })
     }
 
     if (url.pathname === "/svar" && request.method === "POST") {
@@ -244,14 +224,22 @@ export default {
       const vedtak = inn.vedtak?.trim() || null
       const hjemmel = inn.hjemmel?.trim() || null
       const kommune = inn.kommune?.trim() || null
-      // «nei» er et svar: saken er i orden. Spilltjeneren kjenner bare
-      // feltnavn og `null`, så valget oversettes her.
-      const felleValg = inn.felle?.trim() || null
-      const felle = felleValg === "nei" ? null : felleValg
+      // «nei» er et svar, saken er i orden, og sendes som det er.
+      const felle = inn.felle?.trim() || null
+      // Saken skjemaet ble tegnet for, fra nettleseren. Har siden ikke fått
+      // med seg at saken byttet, avviser spilltjeneren svaret i stedet for
+      // å legge det på den nye.
+      const sakId = inn.sakId?.trim() || null
 
-      const feil = valider(vedtak, hjemmel, kommune, felleValg, KOMMUNER)
+      // Appen sier fra ved feltet før svaret sendes. Spilltjeneren avviser
+      // det som likevel ikke er helt, og da er det avvisningen som vises.
+      let feil = valider(vedtak, hjemmel, kommune, felle, KOMMUNER)
       if (feil.length === 0 && spillerId) {
-        await svarInn(spillerId, { vedtak, hjemmel, kommune, felle })
+        const kvittering = await svarInn(spillerId, { vedtak, hjemmel, kommune, felle, sakId }).catch(
+          () => null,
+        )
+        if (!kvittering) feil = [{ felt: null, melding: "Vedtaket kom ikke fram. Prøv igjen." }]
+        else if (!kvittering.ok) feil = feilFraAvvisning(kvittering)
       }
 
       return Response.json(await skjermbilde(spillerId, feil))

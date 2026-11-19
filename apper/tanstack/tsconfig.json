@@ -5,7 +5,7 @@
     "module": "ESNext",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node", "@fristil/designsystem/react-jsx"],
+    "types": ["node", "@lo-tek/interfaces/react-jsx"],
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,

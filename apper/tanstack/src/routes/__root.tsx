@@ -1,5 +1,5 @@
-import { fs } from "@fristil/designsystem"
-import { defineFs } from "@fristil/designsystem/register"
+import { lt } from "@lo-tek/interfaces"
+import { defineLt } from "@lo-tek/interfaces/register"
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router"
 import { createServerFn } from "@tanstack/react-start"
 import { getCookie } from "@tanstack/react-start/server"
@@ -14,10 +14,10 @@ import { KAPSEL_TEMA, type Tema, erTema } from "../tema"
  * En effekt kjører etter første tegning, så elementene i markupen var vanlige
  * `HTMLElement` i det React tegnet dem, og den første meldingen fra
  * hendelsesstrømmen kom i gapet: «reportSuccess is not a function».
- * `defineFs()` registrerer alle ni, gjør ingenting på serveren, og kan
+ * `defineLt()` registrerer alle ni, gjør ingenting på serveren, og kan
  * derfor stå her, i en modul som kjøres begge steder.
  */
-defineFs()
+defineLt()
 
 /**
  * Temaet, hentet på serveren.
@@ -36,7 +36,7 @@ const hentTema = createServerFn({ method: "GET" }).handler(async (): Promise<Tem
 /**
  * Sideskallet.
  *
- * Fristils stilark importeres, ikke lenkes: her er det en bunter, og da er
+ * LO-TEKs stilark importeres, ikke lenkes: her er det en bunter, og da er
  * det den som skal sette dem sammen. `brett.css` er derimot lenket, fordi
  * det er den samme fila alle tre appene serverer, og den ligger utenfor
  * denne appen.
@@ -49,9 +49,9 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Førstelinja · TanStack Start og React" },
     ],
-    /* Temaet ligger i sitt eget lag, `fristil-tema`, erklært etter
-       `fristil`. Det avgjør rekkefølgen uansett når stilarkene lastes, og det
-       er nødvendig her: Vite legger Fristils CSS inn etter lenkene våre. */
+    /* Temaet ligger i sitt eget lag, `lotek-theme`, erklært etter
+       `lotek`. Det avgjør rekkefølgen uansett når stilarkene lastes, og det
+       er nødvendig her: Vite legger LO-TEKs CSS inn etter lenkene våre. */
     links: [
       { rel: "stylesheet", href: "/tema.css" },
       { rel: "stylesheet", href: "/brett.css" },
@@ -106,9 +106,9 @@ function Skall() {
    */
   useEffect(() => {
     import(/* @vite-ignore */ PANELMODUL).then(({ startPanel }) =>
-      (startPanel as (valg: typeof PANELTEKST & { fs: typeof fs }) => void)({
+      (startPanel as (valg: typeof PANELTEKST & { lt: typeof lt }) => void)({
         ...PANELTEKST,
-        fs,
+        lt,
       }),
     )
   }, [])

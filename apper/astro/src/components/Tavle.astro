@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { tavlekropp } from "../lib/tavle"
 import type { Tilstand } from "../lib/tilstand"
@@ -22,10 +22,10 @@ const { tilstand } = Astro.props
 const oppgjor = tilstand.fase !== "runde"
 const paVakt = tilstand.tavle.length
 const levert = tilstand.tavle.filter((r) => r.harSvart).length
-const { class: tabellKlasse, ...tabell } = fs.table()
+const { class: tabellKlasse, ...tabell } = lt.table()
 ---
 
-<h2 {...fs.heading({ size: "s" })}>På vakt nå</h2>
+<h2 {...lt.heading({ size: "s" })} id="tavle-tittel">På vakt nå</h2>
 
 {/* Avsnittet står der i hele runden, også med én på vakt, så øya har noe
     å skrive i når nestemann melder seg på. Før kom det bare med to eller
@@ -45,8 +45,8 @@ const { class: tabellKlasse, ...tabell } = fs.table()
   )
 }
 
-<div class={fs.table.scroll} tabindex="0">
-  <table {...tabell} class={`${tabellKlasse} tavle__tabell`}>
+<div class={lt.table.scroll} tabindex="0">
+  <table {...tabell} class={`${tabellKlasse} tavle__tabell`} aria-labelledby="tavle-tittel">
     <thead>
       <tr>
         <th>#</th>

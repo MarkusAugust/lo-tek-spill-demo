@@ -1,9 +1,9 @@
 /**
- * At markupen de tre appene faktisk sender stemmer med Fristil.
+ * At markupen de tre appene faktisk sender stemmer med LO-TEK.
  *
  * `diagnoseMarkup` er den samme sjekken editorutvidelsen kjører mens du
  * skriver: elementer som ikke finnes, attributter elementet ikke har,
- * verdier utenfor lista, klasser som `fs-buton`, og `<fs-field>` uten
+ * verdier utenfor lista, klasser som `lt-buton`, og `<lt-field>` uten
  * kontroll eller ledetekst. Malene i Kotlin-appen er strenger, og Astro og
  * React skriver JSX, så ingen editor ser den ferdige HTML-en.
  *
@@ -17,7 +17,7 @@
  *
  * Kjør med appene oppe (`./kjor.sh rask`): bun run markup
  */
-import { diagnoseMarkup } from "@fristil/designsystem/diagnostics"
+import { diagnoseMarkup } from "@lo-tek/interfaces/diagnostics"
 import { chromium } from "playwright"
 
 const APPER = [
@@ -60,8 +60,8 @@ try {
     }
     // Forsiden slik serveren sendte den, før noe skript har rørt den.
     const forside = await svar.text()
-    if (!forside.includes("<fs-")) {
-      funn.push(`${app.navn}: forsiden har ingen <fs-…>, så sjekken ser ikke på noe`)
+    if (!forside.includes("<lt-")) {
+      funn.push(`${app.navn}: forsiden har ingen <lt-…>, så sjekken ser ikke på noe`)
       await kontekst.close()
       continue
     }
@@ -84,7 +84,7 @@ try {
       continue
     }
     const brett = await side.content()
-    if (!brett.includes("<fs-suggestion")) {
+    if (!brett.includes("<lt-suggestion")) {
       funn.push(`${app.navn}: brettet har ingen forslagsliste, så sjekken så ikke på det den skulle`)
       await kontekst.close()
       continue
@@ -101,7 +101,7 @@ try {
 
 if (funn.length > 0) {
   console.error(
-    `Markupen stemmer ikke med Fristil:\n\n${funn.map((f) => `  ${f}`).join("\n")}\n`,
+    `Markupen stemmer ikke med LO-TEK:\n\n${funn.map((f) => `  ${f}`).join("\n")}\n`,
   )
 }
 if (sjekket !== APPER.length || sjekket === 0) {
@@ -109,4 +109,4 @@ if (sjekket !== APPER.length || sjekket === 0) {
   process.exit(1)
 }
 if (funn.length > 0) process.exit(1)
-console.log(`Markupen fra alle ${sjekket} appene stemmer med Fristil, på forsiden og brettet.`)
+console.log(`Markupen fra alle ${sjekket} appene stemmer med LO-TEK, på forsiden og brettet.`)

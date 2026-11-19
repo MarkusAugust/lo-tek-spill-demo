@@ -1,26 +1,26 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
-import { APPNAVN, UTGAVER, lenkeTilUtgave } from "../lib/fristil"
+import { APPNAVN, UTGAVER, lenkeTilUtgave } from "../lib/lotek"
 
 /*
  * Velkomsthilsenen, som forklarer hvorfor det finnes tre utgaver.
  *
  * Den vises bare før du har meldt deg på, og serveren sender den åpen.
- * `<fs-dialog>` kaller `showModal()` når den har fått markupen.
+ * `<lt-dialog>` kaller `showModal()` når den har fått markupen.
  */
 const valgtTema = Astro.cookies.get("forstelinja-tema")?.value
 const tema = valgtTema === "light" || valgtTema === "dark" ? valgtTema : null
 
-const boks = fs.dialog({ titleId: "velkomst-tittel", open: true, color: "brand" })
+const boks = lt.dialog({ titleId: "velkomst-tittel", open: true, color: "brand" })
 const { class: dialogKlasse, ...dialog } = boks.dialog
-const { class: overskriftKlasse, ...overskrift } = fs.heading({ size: "xs" })
-const { class: listeKlasse, ...liste } = fs.list({ variant: "plain" })
+const { class: overskriftKlasse, ...overskrift } = lt.heading({ size: "xs" })
+const { class: listeKlasse, ...liste } = lt.list({ variant: "plain" })
 ---
 
 {/* `open` skrives bokstavelig: Astro sprer `true` som `open="true"` på et
     egendefinert element, og det er feil form for et boolsk attributt. */}
-<fs-dialog id="velkomst" open="">
+<lt-dialog id="velkomst" open="">
   <dialog {...dialog} class={`${dialogKlasse} velkomst`}>
     <div {...boks.header}>
       <h2 {...boks.title}>Velkommen til Førstelinja</h2>
@@ -49,7 +49,7 @@ const { class: listeKlasse, ...liste } = fs.list({ variant: "plain" })
                 <span class="velkomst__her">
                   <strong>{utgave.navn}</strong>
                   <span class="velkomst__om">{utgave.rammeverk}</span>
-                  <span {...fs.badge({ color: "success" })}>Du er her</span>
+                  <span {...lt.badge({ color: "success" })}>Du er her</span>
                 </span>
               </li>
             ) : (
@@ -73,10 +73,10 @@ const { class: listeKlasse, ...liste } = fs.list({ variant: "plain" })
     <form method="dialog" {...boks.footer}>
       {/* `autofocus` her, ellers tar `showModal()` den første lenken i lista,
           og et tilfeldig Enter sender deg til en annen utgave. */}
-      <button {...fs.button()} value="lukk" autofocus>Jeg merker nok forskjellen</button>
+      <button {...lt.button()} value="lukk" autofocus>Jeg merker nok forskjellen</button>
     </form>
   </dialog>
-</fs-dialog>
+</lt-dialog>
 
 <script is:inline>
   /*
@@ -94,6 +94,10 @@ const { class: listeKlasse, ...liste } = fs.list({ variant: "plain" })
    */
   document.getElementById("velkomst")?.querySelector("dialog")
     ?.addEventListener("close", function () {
-      document.cookie = "forstelinja-velkomst=sett; path=/; max-age=31536000; samesite=lax"
+      // Skriptet står inline og kan ikke importere `lib/kapsel.ts`, så
+      // merkene står her. De er de samme som der, og `tester/kapsler.ts`
+      // holder dem i takt.
+      document.cookie =
+        "forstelinja-velkomst=sett; Max-Age=31536000; Path=/; SameSite=None; Secure; Partitioned"
     })
 </script>

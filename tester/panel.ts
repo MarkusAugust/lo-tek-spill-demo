@@ -15,7 +15,7 @@ import { chromium, devices, webkit } from "playwright"
  *    `EventSource` etter at øya hadde åpnet den. Avlyttingen måtte ut i et
  *    vanlig skript i `<head>`, som kjører før hvert modulskript.
  * 3. Markeringen av det som nettopp ble byttet ut tegnet ingenting, fordi
- *    `--semantic-info-foreground` ikke finnes i Fristil og en ugyldig `var()`
+ *    `--semantic-info-foreground` ikke finnes i LO-TEK og en ugyldig `var()`
  *    gjør hele regelen ugyldig.
  *
  * Appene må kjøre først:
@@ -284,15 +284,15 @@ try {
     /*
      * At panelet bruker hele svaret fra byggefunksjonen, ikke bare klassen.
      *
-     * `fs.button({ variant: "ghost" })` gir både `class` og `data-variant`,
+     * `lt.button({ variant: "ghost" })` gir både `class` og `data-variant`,
      * og panelet skrev lenge av det siste for hånd ved siden av det første.
-     * Ingen vaktpost så det: `fristilbruk.ts` leter bare etter klasser skrevet
+     * Ingen vaktpost så det: `lotekbruk.ts` leter bare etter klasser skrevet
      * for hånd, `klasselikhet.ts` samler bare klasser, og en klasse som
      * mister attributtet sitt i alle tre utgavene samtidig er fortsatt lik i
      * alle tre. Skrev noen `attributter()` tilbake til bare klassen, gikk
      * hjelpeknappen fra ghost til primær med seks grønne vaktposter.
      *
-     * Verdiene står her framfor å bli hentet fra `fs`: en test som kaller den
+     * Verdiene står her framfor å bli hentet fra `lt`: en test som kaller den
      * samme funksjonen som koden den tester, sier bare at funksjonen er
      * deterministisk.
      */

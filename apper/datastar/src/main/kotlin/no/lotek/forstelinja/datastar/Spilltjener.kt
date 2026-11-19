@@ -1,0 +1,210 @@
+package no.lotek.forstelinja.datastar
+
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+
+/** Hvor lenge strømmen står åpen etter at den siste nettleseren er borte. */
+private const val PUSTEROM_MS = 60_000L
+
+/**
+ * Klienten mot spilltjeneren.
+ *
+ * Appserveren snakker med spilltjeneren, aldri nettleseren. Det er slik
+ * TanStack, Astro og denne appen alle er ment å virke, det holder
+ * spilltjeneren intern, og det gjør at den eneste forskjellen mellom de tre
+ * appene er hva som går fra appserveren og ned til nettleseren.
+ */
+class Spilltjener(private val adresse: String) {
+  private val klient =
+    HttpClient(CIO) {
+      install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+      // Uten dette dør hendelsesstrømmen med én gang. Ktor-klienten har et
+      // standard tidsavbrudd på forespørsler, og en SSE-strøm blir aldri
+      // ferdig, så den ble avbrutt før den rakk å si fra om noe.
+      install(HttpTimeout) { requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS }
+    }
+
+  /**
+   * Slår ut hver gang spilltjeneren melder en endring.
+   *
+   * Appen holder **én** forbindelse oppstrøms, uansett hvor mange som
+   * spiller her. Selve tilstanden er delvis personlig, «dine poeng, din
+   * plass», så hver nettleser får sin egen etterpå. Strømmen sier altså
+   * *når* noe skjedde, ikke *hva* hver enkelt skal se.
+   */
+  val puls =
+    MutableSharedFlow<Unit>(
+      replay = 0,
+      extraBufferCapacity = 1,
+      // Pulsen bærer ingen data, så to slag kan slås sammen til ett. Med
+      // standarden `SUSPEND` sto leseren av oppstrømmen fast så snart én
+      // nettleser ikke tok unna, og da sto alle de andre også.
+      onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+  /**
+   * Henter tilstanden slik én spiller skal se den.
+   *
+   * `meldUtgave` sier fra til spilltjeneren at spilleren sitter i denne
+   * utgaven nå, så tavla og den evige topplista følger med når noen bytter.
+   * Det skal bare skje på en dokumentlasting, aldri fra hentingen strømmen
+   * utløser. Spilltjeneren sender en hendelse for hver flytting, og sa alle
+   * hentingene fra, ble det en sløyfe: står den samme spilleren i to utgaver
+   * samtidig, som når du bytter utgave og lar den gamle fanen stå,
+   * flyttet hver hendelse henne fram og tilbake, og
+   * hver flytting fødte en hendelse til. Spilltjeneren druknet i tusenvis av
+   * hendelser i sekundet, og spillet sto stille.
+   */
+  suspend fun tilstand(spillerId: String?, meldUtgave: Boolean = false): Tilstand =
+    klient
+      .get("$adresse/api/tilstand") {
+        spillerId?.let { parameter("spiller", it) }
+        if (meldUtgave) parameter("stack", "datastar")
+      }
+      .body()
+
+  /**
+   * Melder en spiller på vakta.
+   *
+   * `prove` er paritetstesten, som melder på en spiller i hver utgave.
+   * Poengene til en testspiller havner aldri i den evige topplista, som er
+   * det eneste som overlever en omstart. Uten det ble «Test datastar»
+   * stående der for alltid, hver gang en vakt tok slutt mens testen kjørte.
+   */
+  suspend fun bliMed(navn: String, erTest: Boolean = false): BliMedUt =
+    klient
+      .post("$adresse/api/bli-med") {
+        contentType(ContentType.Application.Json)
+        setBody(BliMedInn(navn = navn, stack = "datastar", erTest = erTest))
+      }
+      .body()
+
+  /**
+   * Melder en spiller av vakta.
+   *
+   * En ekte spiller trenger den ikke: lukker du fanen, er du borte etter tre
+   * runder uten svar. Den finnes fordi paritetstesten melder på en spiller i
+   * hver utgave, og en test som lar tre «Test …» stå igjen på tavla
+   * skitner til det den skal teste.
+   */
+  suspend fun gaAv(spillerId: String) {
+    klient.post("$adresse/api/ga-av") {
+      contentType(ContentType.Application.Json)
+      setBody(GaAvInn(spillerId))
+    }
+  }
+
+  /** Sender vedtaket. Kvitteringen sier om det ble tatt imot, og hvorfor ikke. */
+  suspend fun svar(spillerId: String, svar: Svar): Kvittering =
+    klient
+      .post("$adresse/api/svar") {
+        contentType(ContentType.Application.Json)
+        setBody(SvarInn(spillerId, svar))
+      }
+      .body()
+
+  /**
+   * Antallet nettlesere som ser på akkurat nå, og strømmen som følger dem.
+   *
+   * Oppstrømsforbindelsen åpnes først når noen faktisk ser på, og lukkes når
+   * den siste er borte. Det er ikke bare ryddighet: Railway lar en tjeneste
+   * sove når den ikke har sendt utgående trafikk på fem til ti minutter, og
+   * en strøm som står åpen døgnet rundt er nettopp slik trafikk. Med dette
+   * sovner både appen og spilltjeneren når ingen spiller.
+   *
+   * Pusterommet er der fordi en oppfriskning av siden er to hendelser, en
+   * avmelding og en påmelding, med et lite øyeblikk imellom.
+   */
+  private val seere = java.util.concurrent.atomic.AtomicInteger(0)
+  private var lytterJobb: Job? = null
+  private var nedtelling: Job? = null
+
+  /**
+   * Av- og påmelding må virke i en kansellert koroutine.
+   *
+   * Når nettleseren lukker fanen, blir strømmens koroutine kansellert, og
+   * `finally` kjører. Alt som suspenderer der kaster med en gang, så en
+   * `Mutex` gjorde at avmeldingen aldri skjedde: telleren ble stående over
+   * null, strømmen mot spilltjeneren ble aldri lukket, og ingen av
+   * tjenestene sovnet. Derfor vanlig `synchronized` og ingen suspensjon.
+   */
+  @Synchronized
+  fun abonner(scope: CoroutineScope) {
+    seere.incrementAndGet()
+    nedtelling?.cancel()
+    nedtelling = null
+    if (lytterJobb?.isActive != true) lytterJobb = scope.launch { lytt() }
+  }
+
+  @Synchronized
+  fun avmeld(scope: CoroutineScope) {
+    if (seere.decrementAndGet() > 0) return
+    nedtelling?.cancel()
+    nedtelling =
+      scope.launch {
+        delay(PUSTEROM_MS)
+        stoppHvisTom()
+      }
+  }
+
+  @Synchronized
+  private fun stoppHvisTom() {
+    if (seere.get() > 0) return
+    lytterJobb?.cancel()
+    lytterJobb = null
+  }
+
+  /**
+   * Lytter på spilltjeneren, og kobler til igjen om forbindelsen ryker.
+   *
+   * SSE leses linje for linje framfor med en klientutvidelse. Formatet er
+   * tre linjer og en blank, og en håndskrevet leser er lettere å feilsøke
+   * enn et lag til.
+   */
+  private suspend fun lytt() {
+    while (true) {
+      try {
+        klient.prepareGet("$adresse/api/hendelser").execute { svar ->
+          val kanal: ByteReadChannel = svar.bodyAsChannel()
+          while (!kanal.isClosedForRead) {
+            val linje = kanal.readUTF8Line() ?: break
+            if (linje.startsWith("data:")) puls.tryEmit(Unit)
+          }
+        }
+      } catch (e: CancellationException) {
+        // Den siste nettleseren er borte, og strømmen skal lukkes.
+        throw e
+      } catch (e: Exception) {
+        println("Mistet spilltjeneren (${e.message}). Prøver igjen om to sekunder.")
+      }
+
+      // Et pulsslag også når forbindelsen ryker, ikke bare når noe skjer.
+      //
+      // Uten dette hadde appen ingenting å sende ned til nettleserne, og en
+      // strøm som ikke skriver ryker aldri. Skjermene ble stående helt
+      // normale og aldri oppdatert mer, uten at noen kunne se det. Med
+      // pulsen prøver hver strøm å hente tilstanden, det kallet feiler, og
+      // strømmen sier fra med merket `#samband`, se `meldSambandNede` i
+      // Tjener.kt. Sambandslinja viser det, og strømmen blir stående til
+      // spilltjeneren er tilbake.
+      puls.tryEmit(Unit)
+      delay(2000)
+    }
+  }
+}

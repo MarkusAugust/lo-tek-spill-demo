@@ -1,4 +1,4 @@
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { appnavn, farge, initialer } from "./tekst"
 import type { TavleRad } from "./tilstand"
@@ -11,7 +11,7 @@ import type { TavleRad } from "./tilstand"
  * radmarkupen finnes to ganger, i en mal og i et skript, og de to ville gått
  * fra hverandre første gang noen la til en kolonne.
  *
- * Attributtene kommer fra `fs`, ikke skrevet for hånd, så tavla i denne
+ * Attributtene kommer fra `lt`, ikke skrevet for hånd, så tavla i denne
  * appen kan ikke komme i utakt med de to andre.
  */
 
@@ -24,7 +24,7 @@ function trygg(tekst: string): string {
     .replace(/"/g, "&quot;")
 }
 
-/** Skriver ut et attributtsett fra `fs` som tekst. */
+/** Skriver ut et attributtsett fra `lt` som tekst. */
 function attributter(verdier: Record<string, unknown>): string {
   return Object.entries(verdier)
     .filter(([, verdi]) => verdi !== undefined && verdi !== false)
@@ -34,10 +34,10 @@ function attributter(verdier: Record<string, unknown>): string {
 
 export function tavlerad(rad: TavleRad, oppgjor: boolean): string {
   const merke = oppgjor
-    ? `<span${attributter(fs.badge({ color: farge(rad.stack) }))}>${trygg(appnavn(rad.stack))}</span>`
+    ? `<span${attributter(lt.badge({ color: farge(rad.stack) }))}>${trygg(appnavn(rad.stack))}</span>`
     : rad.harSvart
-      ? `<span${attributter(fs.badge({ color: "success" }))}>Levert</span>`
-      : `<span${attributter(fs.badge())}>Jobber</span>`
+      ? `<span${attributter(lt.badge({ color: "success" }))}>Levert</span>`
+      : `<span${attributter(lt.badge())}>Jobber</span>`
 
   const runde =
     oppgjor && rad.sistePoeng > 0 ? `<span class="tavle__runde"> +${rad.sistePoeng}</span>` : ""
@@ -46,7 +46,7 @@ export function tavlerad(rad: TavleRad, oppgjor: boolean): string {
   <td>${rad.plass}</td>
   <td>
     <span class="tavle__navn">
-      <span${attributter(fs.avatar({ size: "small" }))} aria-hidden="true">${trygg(initialer(rad.navn))}</span>
+      <span${attributter(lt.avatar({ size: "small" }))} aria-hidden="true">${trygg(initialer(rad.navn))}</span>
       <span>${trygg(rad.navn)}${rad.erMeg ? '<span class="tavle__deg"> (deg)</span>' : ""}</span>
     </span>
   </td>

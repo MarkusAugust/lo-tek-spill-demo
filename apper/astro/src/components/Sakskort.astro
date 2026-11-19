@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import type { SakUt } from "../lib/tilstand"
 
@@ -15,31 +15,34 @@ const { sak } = Astro.props
  * Fella ligger i opplysningene om søkeren, ikke i teksten, så begge fanene
  * må leses. Det er hele oppgaven.
  *
- * Fanene her har ingen tilstand på serveren: `<fs-tabs>` tar over i
- * nettleseren og flytter valget med piltastene. Serveren skriver rollene og
- * koblingen, komponenten gjør resten.
+ * Fanene her har ingen tilstand på serveren: `<lt-tabs>` tar over i
+ * nettleseren og flytter valget med piltastene. Serveren skriver lenkene og
+ * id-ene på panelene, komponenten skriver rollene og resten.
  */
-const { class: kortKlasse, ...kort } = fs.card()
-const { class: tittelKlasse, ...tittel } = fs.heading({ size: "m" })
-const { class: ingressKlasse, ...ingress } = fs.paragraph()
-const { class: tekstKlasse, ...tekst } = fs.paragraph()
-const faner = fs.tabs({ id: "sak", count: 2, selected: 0, label: "Saken" })
-const navn = ["Søknaden", "Søkeren"]
+const { class: kortKlasse, ...kort } = lt.card()
+const { class: tittelKlasse, ...tittel } = lt.heading({ size: "m" })
+const { class: ingressKlasse, ...ingress } = lt.paragraph()
+const { class: tekstKlasse, ...tekst } = lt.paragraph()
+const deler = [
+  { nokkel: "soknaden", navn: "Søknaden" },
+  { nokkel: "soker", navn: "Søkeren" },
+]
+const faner = lt.tabs({ id: "sak", keys: deler.map((d) => d.nokkel), label: "Saken" })
 ---
 
 <section {...kort} class={`${kortKlasse} kort sakskort`}>
   <p class="sakskort__stempel">
-    <span {...fs.tag()}>Sak {sak.id}</span>
+    <span {...lt.tag()}>Sak {sak.id}</span>
     <span class="sakskort__status">Til behandling</span>
   </p>
 
   <h2 {...tittel} class={`${tittelKlasse} sakskort__tittel`}>{sak.tittel}</h2>
   <p {...ingress} class={`${ingressKlasse} sakskort__ingress`}>{sak.sammendrag}</p>
 
-  <fs-tabs class="sakskort__faner">
-    <div {...faner.list}>
-      {navn.map((ord, i) => <button {...faner.tabs[i]} type="button">{ord}</button>)}
-    </div>
+  <lt-tabs class="sakskort__faner">
+    <ul {...faner.list}>
+      {deler.map((del, i) => <li><a {...faner.tabs[i]}>{del.navn}</a></li>)}
+    </ul>
 
     <div {...faner.panels[0]}>
       <p {...tekst} class={`${tekstKlasse} sakskort__tekst`}>{sak.tekst}</p>
@@ -49,7 +52,7 @@ const navn = ["Søknaden", "Søkeren"]
     </div>
 
     <div {...faner.panels[1]}>
-      <table {...fs.table()}>
+      <table {...lt.table()} aria-label="Opplysninger om søkeren">
         <tbody>
           <tr><th scope="row">Navn</th><td>{sak.soker.navn}</td></tr>
           <tr><th scope="row">Fødselsdato</th><td>{sak.soker.fodselsdato}</td></tr>
@@ -58,5 +61,5 @@ const navn = ["Søknaden", "Søkeren"]
         </tbody>
       </table>
     </div>
-  </fs-tabs>
+  </lt-tabs>
 </section>

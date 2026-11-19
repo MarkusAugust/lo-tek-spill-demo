@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import BliMed from "../components/BliMed.astro"
 import Kvittering from "../components/Kvittering.astro"
@@ -12,11 +12,12 @@ import Tavle from "../components/Tavle.astro"
 import Topplinje from "../components/Topplinje.astro"
 import Vedtakskort from "../components/Vedtakskort.astro"
 import Velkomst from "../components/Velkomst.astro"
-import { APPNAVN, KAPSEL } from "../lib/fristil"
+import { APPNAVN, KAPSEL } from "../lib/lotek"
 import { KOMMUNER } from "../lib/kommuner"
 import { svarInn, tilstand as hentTilstand } from "../lib/spilltjener"
 import type { Feil } from "../lib/tilstand"
-import { valider } from "../lib/validering"
+import { settKapsel, slettGammelForm } from "../lib/kapsel"
+import { feilFraAvvisning, valider } from "../lib/validering"
 
 export const prerender = false
 
@@ -38,24 +39,17 @@ export const prerender = false
  */
 const billett = Astro.url.searchParams.get("spiller")
 if (billett) {
-  const https = Astro.url.protocol === "https:"
-  Astro.cookies.set(KAPSEL, billett, {
-    path: "/",
-    maxAge: 8 * 60 * 60,
-    httpOnly: true,
-    sameSite: https ? "none" : "lax",
-    secure: https,
-  })
+  // Hodene skrives selv, som i bli-med.ts: hver kapsel settes, og den gamle
+  // formen slettes, og Astro sender bare én `Set-Cookie` per navn.
+  const hoder = new Headers({ location: "/" })
+  hoder.append("set-cookie", slettGammelForm(KAPSEL))
+  hoder.append("set-cookie", settKapsel(KAPSEL, billett, 8 * 60 * 60, { httpOnly: true }))
   const temaBillett = Astro.url.searchParams.get("tema")
   if (temaBillett === "light" || temaBillett === "dark") {
-    Astro.cookies.set("forstelinja-tema", temaBillett, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: https ? "none" : "lax",
-      secure: https,
-    })
+    hoder.append("set-cookie", slettGammelForm("forstelinja-tema"))
+    hoder.append("set-cookie", settKapsel("forstelinja-tema", temaBillett, 60 * 60 * 24 * 365))
   }
-  return Astro.redirect("/", 303)
+  return new Response(null, { status: 303, headers: hoder })
 }
 
 const spillerId = Astro.cookies.get(KAPSEL)?.value ?? null
@@ -71,7 +65,7 @@ const harSettVelkomst = Astro.cookies.get("forstelinja-velkomst")?.value === "se
  * veiene virker. Over vanlig http mot en maskin på nettet kommer hilsenen
  * tilbake i rammene.
  */
-const { class: kortKlasse, ...kort } = fs.card()
+const { class: kortKlasse, ...kort } = lt.card()
 
 const iRamme = Astro.request.headers.get("sec-fetch-dest") === "iframe"
 // `append` og ikke `set`: Astro setter selv `Vary` for økter, og den skal
@@ -90,6 +84,7 @@ if (Astro.request.method === "POST") {
     kommune: String(skjema.get("kommune") ?? "").trim(),
     felle: String(skjema.get("felle") ?? "").trim(),
   }
+  const sakId = String(skjema.get("sakId") ?? "").trim() || null
 
   feil = valider(
     svar.vedtak || null,
@@ -101,14 +96,17 @@ if (Astro.request.method === "POST") {
 
   if (feil.length === 0 && spillerId) {
     try {
-      await svarInn(spillerId, {
+      const kvittering = await svarInn(spillerId, {
         vedtak: svar.vedtak,
         hjemmel: svar.hjemmel,
         kommune: svar.kommune || null,
-        // «nei» er et svar: saken er i orden. Spilltjeneren kjenner bare
-        // feltnavn og `null`, så valget oversettes her.
-        felle: svar.felle === "nei" ? null : svar.felle,
+        // «nei» er et svar, saken er i orden, og sendes som det er.
+        felle: svar.felle,
+        sakId,
       })
+      // Spilltjeneren avviser det som likevel ikke er helt, eller et svar
+      // på en sak som ikke ligger på bordet lenger.
+      if (!kvittering.ok) feil = feilFraAvvisning(kvittering)
     } catch {
       // Spilltjeneren svarte ikke. Da skal ikke siden gi en stakksporing:
       // vedtaket står fortsatt i skjemaet, og under kommer venteskjermen
@@ -163,8 +161,8 @@ try {
     <Side tittel={`Førstelinja · ${APPNAVN}`}>
       {tilstand.meg === null && !harSettVelkomst && !iRamme && <Velkomst />}
 
-      <fs-connection-status
-        {...fs.connectionStatus()}
+      <lt-connection-status
+        {...lt.connectionStatus()}
         offline-text="Sambandet til etaten er nede"
         online-text="Sambandet er tilbake"
       />
@@ -207,9 +205,9 @@ try {
               }
             </div>
 
-            <aside id="tavle" {...kort} class={`${kortKlasse} kort tavle`}>
+            <section id="tavle" {...kort} class={`${kortKlasse} kort tavle`} aria-labelledby="tavle-tittel">
               <Tavle tilstand={tilstand} />
-            </aside>
+            </section>
 
             <Resultatdialog tilstand={tilstand} />
           </div>

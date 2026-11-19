@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { feltnavn, stor, vedtaksord } from "../lib/tekst"
 import type { Tilstand } from "../lib/tilstand"
@@ -22,33 +22,22 @@ const { tilstand } = Astro.props
  */
 const fasit = tilstand.fasit
 const meg = tilstand.meg
-const vis = tilstand.fase === "oppgjor" && fasit !== null && meg !== null
+// Resultatet avgjør spilltjeneren, også om det ble et avvik eller om
+// spilleren kom inn midt i saken. Her velges bare tekst og farge.
+const resultat = meg?.resultat ?? null
+const vis = tilstand.fase === "oppgjor" && fasit !== null && meg !== null && resultat !== null
 
 const svar = meg?.svar
 const vurdering = meg?.vurdering
-const besvart = Boolean(svar && vurdering)
-const full = tilstand.poeng.fullPott
-
-const utfall = !meg
-  ? "sent"
-  : besvart && (vurdering?.poeng ?? 0) >= full
-    ? "full"
-    : besvart && (vurdering?.poeng ?? 0) > 0
-      ? "delvis"
-      : besvart
-        ? "ingen"
-        : meg.medPaSaken
-          ? "avvik"
-          : "sent"
 
 const overskrift =
-  utfall === "full"
+  resultat === "full"
     ? "Full pott"
-    : utfall === "delvis"
+    : resultat === "delvis"
       ? "Delvis truffet"
-      : utfall === "ingen"
+      : resultat === "ingen"
         ? "Ingen uttelling"
-        : utfall === "sent"
+        : resultat === "sent"
           ? "Du kom inn midt i saken"
           : "Avvik registrert"
 
@@ -85,39 +74,39 @@ const rader = fasit
   : []
 
 const igjen = meg ? tilstand.grenseUtenSvar - meg.runderUtenSvar : 0
-// Toppen bærer utfallet, med dialogens egne farger.
+// Toppen bærer resultatet, med dialogens egne farger.
 const farge =
-  utfall === "full"
+  resultat === "full"
     ? "success"
-    : utfall === "delvis"
+    : resultat === "delvis"
       ? "info"
-      : utfall === "ingen" || utfall === "avvik"
+      : resultat === "ingen" || resultat === "avvik"
         ? "danger"
         : "neutral"
-const boks = fs.dialog({ titleId: "resultat-tittel", open: vis, color: farge })
+const boks = lt.dialog({ titleId: "resultat-tittel", open: vis, color: farge })
 const { class: dialogKlasse, ...dialog } = boks.dialog
 const { class: undertekstKlasse, ...undertekst } = boks.subtitle
 ---
 
 {
   vis && meg && fasit ? (
-    <fs-dialog id="resultat" open="">
-      <dialog {...dialog} class={`${dialogKlasse} resultat`} data-utfall={utfall}>
+    <lt-dialog id="resultat" open="">
+      <dialog {...dialog} class={`${dialogKlasse} resultat`} data-resultat={resultat}>
         <div {...boks.header}>
           <h2 {...boks.title}>{overskrift}</h2>
-          {utfall === "sent" ? (
+          {resultat === "sent" ? (
             <p {...undertekst} class={`${undertekstKlasse} resultat__forklaring`}>
               Saken lå alt på bordet da du møtte. Ingen poeng denne runden, og du er med
               fra neste sak.
             </p>
-          ) : utfall === "avvik" ? (
+          ) : resultat === "avvik" ? (
             <p {...undertekst} class={`${undertekstKlasse} resultat__forklaring`}>
               Saken ble ikke behandlet innen fristen. Avviket er varslet til
               statsforvalteren, og runden gir null poeng.
             </p>
           ) : (
             <p {...undertekst} class={`${undertekstKlasse} resultat__poeng`}>
-              <strong>{vurdering?.poeng ?? 0}</strong> av {full} poeng
+              <strong>{vurdering?.poeng ?? 0}</strong> av {tilstand.poeng.fullPott} poeng
             </p>
           )}
         </div>
@@ -125,7 +114,7 @@ const { class: undertekstKlasse, ...undertekst } = boks.subtitle
         <div {...boks.body}>
           <dl class="resultat__liste">
             {rader.map((rad) =>
-              utfall === "sent" ? (
+              resultat === "sent" ? (
                 <div class="resultat__rad">
                   <dt class="resultat__felt">{rad.navn}</dt>
                   <dd class="resultat__ditt">{rad.riktig}</dd>
@@ -153,21 +142,21 @@ const { class: undertekstKlasse, ...undertekst } = boks.subtitle
             </p>
           )}
 
-          {/* Nøytral farge med vilje: toppfeltet over bærer utfallet, og to
+          {/* Nøytral farge med vilje: toppfeltet over bærer resultatet, og to
               fargede flater oppå hverandre gjør det uklart hvilken av dem som
               betyr noe. */}
-          <div {...fs.alert()}>
-            <p class={fs.alert.title}>Sak {tilstand.sak.id}</p>
+          <div {...lt.alert()}>
+            <p class={lt.alert.title}>Sak {tilstand.sak.id}</p>
             <p>{tilstand.forklaring ?? ""}</p>
           </div>
         </div>
 
         <form method="dialog" {...boks.footer}>
-          <button {...fs.button()} value="lukk">Lukk</button>
+          <button {...lt.button()} value="lukk">Lukk</button>
         </form>
       </dialog>
-    </fs-dialog>
+    </lt-dialog>
   ) : (
-    <fs-dialog id="resultat" />
+    <lt-dialog id="resultat" />
   )
 }

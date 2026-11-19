@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro"
 
-import { KAPSEL } from "../lib/fristil"
+import { settKapsel, slettGammelForm } from "../lib/kapsel"
+import { KAPSEL } from "../lib/lotek"
 import { bliMed, erTest } from "../lib/spilltjener"
 
 export const prerender = false
@@ -12,34 +13,23 @@ export const prerender = false
  * siden før JavaScript. Kapselen må stå før hendelsesstrømmen åpnes, ellers
  * vet serveren ikke hvem som sitter der.
  */
-export const POST: APIRoute = async ({ request, cookies, redirect, url }) => {
+export const POST: APIRoute = async ({ request }) => {
   const skjema = await request.formData()
   const navn = String(skjema.get("navn") ?? "")
 
   /*
-   * `SameSite=None` i drift, `Lax` lokalt.
-   *
-   * Skallet viser de tre utgavene i hver sin ramme, og i drift ligger de på
-   * hvert sitt domene. Da er kapselen en tredjepartskapsel, og `Lax` gjør at
-   * nettleseren aldri sender den: du kunne se spillet i rammen, men ikke
-   * melde deg på. `None` krever `Secure`, altså https, og det har vi bare i
-   * drift. Lokalt er alle tre på `localhost`, som er samme nettsted uansett
-   * portnummer.
+   * Hodene skrives her og ikke med `cookies.set`: kapselen settes, og den
+   * gamle formen uten `Partitioned` slettes, og Astro sender bare én
+   * `Set-Cookie` per navn. Merkene står i `lib/kapsel.ts`.
    */
-  const https = url.protocol === "https:"
-
+  const hoder = new Headers({ location: "/" })
   try {
     const spiller = await bliMed(navn, erTest(request))
-    cookies.set(KAPSEL, spiller.spillerId, {
-      path: "/",
-      maxAge: 8 * 60 * 60,
-      httpOnly: true,
-      sameSite: https ? "none" : "lax",
-      secure: https,
-    })
+    hoder.append("set-cookie", slettGammelForm(KAPSEL))
+    hoder.append("set-cookie", settKapsel(KAPSEL, spiller.spillerId, 8 * 60 * 60, { httpOnly: true }))
   } catch {
     // Spilltjeneren er nede. Forsiden sier fra om det, så vi sender deg dit.
   }
 
-  return redirect("/", 303)
+  return new Response(null, { status: 303, headers: hoder })
 }
