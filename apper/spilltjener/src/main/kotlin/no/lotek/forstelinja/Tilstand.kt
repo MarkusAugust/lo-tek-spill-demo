@@ -66,6 +66,8 @@ data class MegUt(
   val runderUtenSvar: Int,
   val svar: Svar?,
   val vurdering: Vurdering? = null,
+  /** Se [Resultat]. `null` mens runden går og spilleren ikke har svart. */
+  val resultat: Resultat? = null,
 )
 
 @Serializable

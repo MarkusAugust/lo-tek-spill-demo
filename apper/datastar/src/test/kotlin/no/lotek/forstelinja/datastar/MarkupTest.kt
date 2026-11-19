@@ -372,6 +372,7 @@ class MarkupTest {
             harSvart = true,
             svar = Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"),
             vurdering = Vurdering(true, false, true, true, 20),
+            resultat = "delvis",
           ),
       )
 
@@ -403,7 +404,12 @@ class MarkupTest {
   }
 
   /** Tilstanden i oppgjøret, med fasit og et svar å vurdere. */
-  private fun oppgjorMed(vurdering: Vurdering, svar: Svar?, medPaSaken: Boolean = true) =
+  /**
+   * Oppgjøret med resultatet ferdig satt, slik spilltjeneren sender det.
+   * Regelen for hvilket resultat det blir, testes i spilltjeneren; her
+   * sjekkes bare hva appen viser for hvert av dem.
+   */
+  private fun oppgjorMed(resultat: String, vurdering: Vurdering, svar: Svar?, medPaSaken: Boolean = true) =
     tilstand.copy(
       fase = "oppgjor",
       fasit = Fasit("avslatt", "§ 12-3", "fodselsdato"),
@@ -420,6 +426,7 @@ class MarkupTest {
           medPaSaken = medPaSaken,
           svar = svar,
           vurdering = vurdering,
+          resultat = resultat,
         ),
     )
 
@@ -430,6 +437,7 @@ class MarkupTest {
     val html =
       brett(
         oppgjorMed(
+          "delvis",
           Vurdering(true, false, true, true, 20),
           Svar("avslatt", "§ 4-1", "Bergen", "fodselsdato"),
         ),
@@ -452,7 +460,7 @@ class MarkupTest {
 
   @Test
   fun `den som ikke rakk fristen får et avvik, ikke en poengsum`() {
-    val html = brett(oppgjorMed(Vurdering(false, false, false, false, 0), null), "Kari")
+    val html = brett(oppgjorMed("avvik", Vurdering(false, false, false, false, 0), null), "Kari")
 
     assertTrue(html.contains("Avvik registrert"), "overskriften skal si at det er et avvik")
     // Teksten brytes over flere linjer i malen, så mellomrom slås sammen
@@ -461,7 +469,7 @@ class MarkupTest {
     val flat = html.replace(Regex("""\s+"""), " ")
     assertTrue(flat.contains("varslet til statsforvalteren"), "avviket skal ha en følge")
     assertTrue(html.contains("""data-color="danger""""), "dialogen skal fargelegges som avvik")
-    assertTrue(html.contains("""data-utfall="avvik""""), "utfallet skal stå som datakrok")
+    assertTrue(html.contains("""data-resultat="avvik""""), "resultatet skal stå som datakrok")
   }
 
   @Test
@@ -475,7 +483,7 @@ class MarkupTest {
     // omgangen er slutt. Da er oppgjøret for lengst lest, og dialogen skal
     // ikke legge seg over sluttlista.
     val vedSlutt =
-      oppgjorMed(Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
+      oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
         .copy(fase = "slutt")
 
     assertFalse(
@@ -490,7 +498,7 @@ class MarkupTest {
     // aldri. Uten fredningen river morfingen det bort. Verten skal derimot
     // ikke fredes, ellers kan serveren aldri åpne dialogen på nytt.
     val html =
-      brett(oppgjorMed(Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato")), "Kari")
+      brett(oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato")), "Kari")
 
     val dialogtagg = Regex("""<dialog[^>]*""").find(html)?.value ?: ""
     val verten = Regex("""<lt-dialog[^>]*""").find(html)?.value ?: ""
@@ -508,7 +516,7 @@ class MarkupTest {
     // `defineLt()` registrerer alle ni. Det som fortsatt skal stemme er at
     // demoen bruker dem den sier den viser fram: hver av de sju denne appen
     // bruker står i markupen i en av fasene.
-    val oppgjor = oppgjorMed(Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
+    val oppgjor = oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
     val html =
       side(tilstand, "Kari", listOf("Bergen")) +
         brett(tilstand, "Kari", listOf("Bergen")) +
@@ -542,7 +550,7 @@ class MarkupTest {
     // feil person. Hun skal likevel få vite hva som var riktig, ellers blir
     // neste sak like tilfeldig for henne som for alle andre.
     val html =
-      brett(oppgjorMed(Vurdering(false, false, false, false, 0), null, medPaSaken = false), "Kari")
+      brett(oppgjorMed("sent", Vurdering(false, false, false, false, 0), null, medPaSaken = false), "Kari")
 
     assertTrue(html.contains("Du kom inn midt i saken"))
     assertFalse(html.contains(">Feil</dd>"), "hun skal ikke få «Feil» på noe hun aldri så")
@@ -583,7 +591,7 @@ class MarkupTest {
     // igjen. Datastar setter `open` på verten, og komponenten gjør kallet.
     val html =
       brett(
-        oppgjorMed(Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato")),
+        oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato")),
         "Kari",
       )
 
@@ -631,7 +639,7 @@ class MarkupTest {
   @Test
   fun `oppgjøret sier hvem som kom best ut av saken`() {
     val to =
-      oppgjorMed(Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
+      oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar("avslatt", "§ 12-3", "Bergen", "fodselsdato"))
         .copy(
           tavle =
             listOf(
@@ -648,7 +656,7 @@ class MarkupTest {
 
   @Test
   fun `med bare én på vakt står det ingenting om hvem som er best`() {
-    val html = brett(oppgjorMed(Vurdering(true, true, true, true, 25), Svar()), "Kari")
+    val html = brett(oppgjorMed("full", Vurdering(true, true, true, true, 25), Svar()), "Kari")
 
     assertFalse(html.contains("kom best ut av saken"), "det er ingen å sammenligne med")
     assertFalse(html.contains("saksbehandlere har levert"), "heller ikke noen å vente på")

@@ -112,6 +112,25 @@ enum class Fase {
   @SerialName("slutt") SLUTT,
 }
 
+/**
+ * Hvordan saken gikk for én spiller.
+ *
+ * Avgjøres her og ikke i appene. Før regnet hver av de tre appene det ut
+ * selv av poengene og `medPaSaken`, to steder hver, og kopiene hadde alt
+ * begynt å gli fra hverandre. Appene velger tekst og farge; regelen er
+ * spillets.
+ */
+@Serializable
+enum class Resultat {
+  @SerialName("full") FULL,
+  @SerialName("delvis") DELVIS,
+  @SerialName("ingen") INGEN,
+  /** Var med på saken fra starten, og svarte ikke før runden var over. */
+  @SerialName("avvik") AVVIK,
+  /** Kom midt i saken og svarte ikke. Ikke et avvik: sjansen var aldri der. */
+  @SerialName("sent") SENT,
+}
+
 /** Hvilken app spilleren sitter i. Vises på tavla, og er hele poenget. */
 @Serializable
 enum class Stack {
@@ -338,6 +357,20 @@ class Spill(
    * gang, og til opptellingen når runden er over. To utregninger kunne gått
    * fra hverandre, og da ville kvitteringen sagt noe annet enn tavla.
    */
+  /**
+   * Resultatet til én spiller: fra svaret når det finnes, ellers bare når
+   * runden er over. Mens runden går uten svar er det ikke avgjort ennå.
+   */
+  private fun resultat(vurdering: Vurdering?, medPaSaken: Boolean): Resultat? =
+    when {
+      vurdering != null && vurdering.poeng >= POENG_FULL_POTT -> Resultat.FULL
+      vurdering != null && vurdering.poeng > 0 -> Resultat.DELVIS
+      vurdering != null -> Resultat.INGEN
+      fase == Fase.RUNDE -> null
+      medPaSaken -> Resultat.AVVIK
+      else -> Resultat.SENT
+    }
+
   private fun vurder(svar: Svar?, sak: Sak): Vurdering {
     val fasit = sak.fasit
     if (svar == null) return Vurdering(false, false, false, false, 0)
@@ -527,6 +560,7 @@ class Spill(
               runderUtenSvar = it.runderUtenSvar,
               svar = it.svar,
               vurdering = it.svar?.let { svar -> vurder(svar, sak) },
+              resultat = resultat(it.svar?.let { svar -> vurder(svar, sak) }, it.medPaSaken),
             )
           },
         harSvart = spillere.values.count { it.medPaSaken && it.svar != null },

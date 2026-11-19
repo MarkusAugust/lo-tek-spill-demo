@@ -60,6 +60,12 @@ data class MegUt(
   val runderUtenSvar: Int = 0,
   val svar: Svar? = null,
   val vurdering: Vurdering? = null,
+  /**
+   * Hvordan saken gikk: `full`, `delvis`, `ingen`, `avvik` eller `sent`.
+   * Spilltjeneren avgjør det; se `GLOSSARY.md`. `null` mens runden går og
+   * spilleren ikke har svart.
+   */
+  val resultat: String? = null,
 )
 
 @Serializable data class ToppEntry(val navn: String, val poeng: Int, val stack: String, val nar: Long)

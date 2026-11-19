@@ -62,7 +62,14 @@ export type MegUt = {
   runderUtenSvar: number
   svar: Svar | null
   vurdering: Vurdering | null
+  /**
+   * Hvordan saken gikk. Spilltjeneren avgjør det; se `GLOSSARY.md`.
+   * `null` mens runden går og spilleren ikke har svart.
+   */
+  resultat: Resultat | null
 }
+
+export type Resultat = "full" | "delvis" | "ingen" | "avvik" | "sent"
 
 export type ToppEntry = { navn: string; poeng: number; stack: string; nar: number }
 

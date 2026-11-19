@@ -10,6 +10,7 @@
     "paritet": "bun run paritet.ts",
     "samtidig": "bun run samtidig.ts",
     "skall": "bun run skall.ts",
+    "skallspill": "bun run skallspill.ts",
     "sloyfe": "bun run sloyfe.ts",
     "tema": "bunx @lo-tek/interfaces@0.46.0 theme ../felles/lotek.theme.json --out=../felles/tema.css",
     "vakthund": "bun run vakthund.ts"

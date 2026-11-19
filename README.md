@@ -87,6 +87,8 @@ det samme.
 
 Når runden er over, kommer resultatet som en **modal dialog**: hva du svarte, hva som var riktig, felt for felt, og hvorfor. Rakk du ikke fristen, sier den i stedet at saken ikke ble behandlet i tide, og at avviket er varslet til statsforvalteren. Lukker du dialogen mens du venter på neste sak, kommer du til den igjen med «Se resultatet».
 
+Hvilket resultat det ble, avgjør spilltjeneren og sender som `meg.resultat`: full pott, delvis, ingen uttelling, avvik eller kom for sent. Appene velger bare tekst og farge for hvert av dem. Ordene står i [GLOSSARY.md](GLOSSARY.md).
+
 Den dialogen er grunnen til at `<lt-dialog>` finnes i LO-TEK. Å åpne en `<dialog>` er et kall, og en server som bare sender HTML kan ikke kalle noe; `<dialog open>` er bare en boks på siden. Demoen fant altså et hull i designsystemet, og hullet ble tettet der.
 
 Har alle svart før fristen, kortes den inn til fire sekunder framfor å ende
@@ -179,6 +181,7 @@ bun run samtidig  # at tre spillere i tre utgaver ser den samme tavla
 bun run panel     # at panelet forteller sant om hva som kom over ledningen
 bun run vakthund  # at Datastar-utgaven kommer seg etter en strøm som dør
 bun run skall     # at hilsenen ikke legger seg over rammene i skallet
+bun run skallspill # at tre spillere i skallet får hvert sitt resultat av samme sak
 bun run lotekbruk  # at appene bruker LO-TEK slik dokumentasjonen sier
 bun run klasselikhet # at de tre utgavene bruker de samme klassene
 bun run markup    # at HTML-en appene sender stemmer med LO-TEK

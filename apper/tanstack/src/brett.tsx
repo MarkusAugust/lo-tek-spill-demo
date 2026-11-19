@@ -661,11 +661,17 @@ function Hjemmelhjelp({ hjemler }: { hjemler: Hjemmel[] }) {
 function Kvittering({ tilstand }: { tilstand: Tilstand }) {
   const vurdering = tilstand.meg?.vurdering
   const poeng = vurdering?.poeng ?? 0
-  const full = tilstand.poeng.fullPott
+  // Spilltjeneren avgjør resultatet. Her velges bare tekst og farge.
+  const resultat = tilstand.meg?.resultat
 
-  const farge = poeng >= full ? "success" : poeng > 0 ? "info" : "warning"
+  const farge =
+    resultat === "full" ? "success" : resultat === "delvis" ? "info" : "warning"
   const overskrift =
-    poeng >= full ? "Full pott" : poeng > 0 ? "Delvis truffet" : "Ingen uttelling"
+    resultat === "full"
+      ? "Full pott"
+      : resultat === "delvis"
+        ? "Delvis truffet"
+        : "Ingen uttelling"
 
   const linjer: [string, boolean, number][] = vurdering
     ? [
@@ -685,7 +691,7 @@ function Kvittering({ tilstand }: { tilstand: Tilstand }) {
         <p>
           Du fikk{" "}
           <strong>
-            {poeng} av {full} poeng
+            {poeng} av {tilstand.poeng.fullPott} poeng
           </strong>{" "}
           på denne saken.
         </p>
@@ -1050,43 +1056,36 @@ function Resultatdialog({
   // Dialogen hører til oppgjøret, og innholdet skal ikke stå i markupen
   // ellers. Spilltjeneren sender ingen fasit i en runde, men skjermen skal
   // ikke hvile på det.
-  if (tilstand.fase !== "oppgjor" || !fasit || !meg) return <lt-dialog id="resultat" />
+  //
+  // Resultatet avgjør spilltjeneren, også om det ble et avvik eller om
+  // spilleren kom inn midt i saken. Her velges bare tekst og farge.
+  const resultat = meg?.resultat
+  if (tilstand.fase !== "oppgjor" || !fasit || !meg || !resultat) {
+    return <lt-dialog id="resultat" />
+  }
 
   const svar = meg.svar
   const vurdering = meg.vurdering
-  const besvart = Boolean(svar && vurdering)
-  const full = tilstand.poeng.fullPott
 
-  const utfall =
-    besvart && (vurdering?.poeng ?? 0) >= full
-      ? "full"
-      : besvart && (vurdering?.poeng ?? 0) > 0
-        ? "delvis"
-        : besvart
-          ? "ingen"
-          : meg.medPaSaken
-            ? "avvik"
-            : "sent"
-
-  // Toppen bærer utfallet, med dialogens egne farger.
+  // Toppen bærer resultatet, med dialogens egne farger.
   const farge =
-    utfall === "full"
+    resultat === "full"
       ? "success"
-      : utfall === "delvis"
+      : resultat === "delvis"
         ? "info"
-        : utfall === "ingen" || utfall === "avvik"
+        : resultat === "ingen" || resultat === "avvik"
           ? "danger"
           : "neutral"
   const boks = lt.dialog({ titleId: "resultat-tittel", open: apen, color: farge })
 
   const overskrift =
-    utfall === "full"
+    resultat === "full"
       ? "Full pott"
-      : utfall === "delvis"
+      : resultat === "delvis"
         ? "Delvis truffet"
-        : utfall === "ingen"
+        : resultat === "ingen"
           ? "Ingen uttelling"
-          : utfall === "sent"
+          : resultat === "sent"
             ? "Du kom inn midt i saken"
             : "Avvik registrert"
 
@@ -1124,22 +1123,22 @@ function Resultatdialog({
 
   return (
     <lt-dialog id="resultat" {...boks.host}>
-      <dialog {...med(boks.dialog, "resultat")} data-utfall={utfall}>
+      <dialog {...med(boks.dialog, "resultat")} data-resultat={resultat}>
         <div {...boks.header}>
           <h2 {...boks.title}>{overskrift}</h2>
-          {utfall === "sent" ? (
+          {resultat === "sent" ? (
             <p {...med(boks.subtitle, "resultat__forklaring")}>
               Saken lå alt på bordet da du møtte. Ingen poeng denne runden, og du er med
               fra neste sak.
             </p>
-          ) : utfall === "avvik" ? (
+          ) : resultat === "avvik" ? (
             <p {...med(boks.subtitle, "resultat__forklaring")}>
               Saken ble ikke behandlet innen fristen. Avviket er varslet til
               statsforvalteren, og runden gir null poeng.
             </p>
           ) : (
             <p {...med(boks.subtitle, "resultat__poeng")}>
-              <strong>{vurdering?.poeng ?? 0}</strong> av {full} poeng
+              <strong>{vurdering?.poeng ?? 0}</strong> av {tilstand.poeng.fullPott} poeng
             </p>
           )}
         </div>
@@ -1147,7 +1146,7 @@ function Resultatdialog({
         <div {...boks.body}>
           <dl className="resultat__liste">
             {rader.map((rad) =>
-              utfall === "sent" ? (
+              resultat === "sent" ? (
                 <div className="resultat__rad" key={rad.navn}>
                   <dt className="resultat__felt">{rad.navn}</dt>
                   <dd className="resultat__ditt">{rad.riktig}</dd>
@@ -1179,7 +1178,7 @@ function Resultatdialog({
             </p>
           )}
 
-          {/* Nøytral farge med vilje: toppfeltet over bærer utfallet, og to
+          {/* Nøytral farge med vilje: toppfeltet over bærer resultatet, og to
               fargede flater oppå hverandre gjør det uklart hvilken av dem som
               betyr noe. */}
           <div {...lt.alert()}>

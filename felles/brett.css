@@ -605,7 +605,7 @@ body:has(.lt-connection-status__bar) .topplinje {
   --lt-dialog-width: min(34rem, 100%, calc(100vw - var(--lt-spacing-8)));
 }
 
-/* Utfallet står som et eget felt øverst, med dialogens egne farger:
+/* Resultatet står som et eget felt øverst, med dialogens egne farger:
    `data-color` på dialogen og en `header`-del rundt overskriften. */
 
 .resultat .lt-dialog__body {

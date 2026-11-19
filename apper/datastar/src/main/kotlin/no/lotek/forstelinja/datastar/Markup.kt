@@ -959,6 +959,8 @@ private fun vedtakskort(tilstand: Tilstand, kommuner: List<String>, feil: List<F
 private fun kvittering(tilstand: Tilstand): String {
   val vurdering = tilstand.meg?.vurdering
   val poeng = vurdering?.poeng ?: 0
+  // Spilltjeneren avgjør resultatet. Her velges bare tekst og farge.
+  val resultat = tilstand.meg?.resultat
 
   fun linje(navn: String, riktig: Boolean, verdt: Int) =
     """
@@ -971,15 +973,15 @@ private fun kvittering(tilstand: Tilstand): String {
       .trimIndent()
 
   val farge =
-    when {
-      poeng >= tilstand.poeng.fullPott -> "success"
-      poeng > 0 -> "info"
+    when (resultat) {
+      "full" -> "success"
+      "delvis" -> "info"
       else -> "warning"
     }
   val overskrift =
-    when {
-      poeng >= tilstand.poeng.fullPott -> "Full pott"
-      poeng > 0 -> "Delvis truffet"
+    when (resultat) {
+      "full" -> "Full pott"
+      "delvis" -> "Delvis truffet"
       else -> "Ingen uttelling"
     }
 
@@ -1057,26 +1059,18 @@ fun resultatdialog(tilstand: Tilstand): String {
   // ellers. Spilltjeneren sender ingen fasit i en runde, men markupen skal
   // ikke hvile på det: sto fasiten her skjult, kunne hvem som helst lest den
   // i kildekoden mens runden gikk.
-  if (tilstand.fase != "oppgjor" || fasit == null || meg == null) {
+  // Resultatet avgjør spilltjeneren, også om det ble et avvik eller om
+  // spilleren kom inn midt i saken. Her velges bare tekst og farge.
+  val resultat = meg?.resultat
+  if (tilstand.fase != "oppgjor" || fasit == null || meg == null || resultat == null) {
     return """<lt-dialog id="resultat"></lt-dialog>"""
   }
 
   val svar = meg.svar
   val vurdering = meg.vurdering
-  val besvart = svar != null && vurdering != null
 
-  val utfall =
-    when {
-      besvart && vurdering!!.poeng >= tilstand.poeng.fullPott -> "full"
-      besvart && vurdering!!.poeng > 0 -> "delvis"
-      besvart -> "ingen"
-      // Den som meldte seg på midt i saken har aldri sett den, og skal ikke
-      // få et avvik for noe hun ikke kunne gjort noe med.
-      !meg.medPaSaken -> "sent"
-      else -> "avvik"
-    }
   val overskrift =
-    when (utfall) {
+    when (resultat) {
       "full" -> "Full pott"
       "delvis" -> "Delvis truffet"
       "ingen" -> "Ingen uttelling"
@@ -1101,7 +1095,7 @@ fun resultatdialog(tilstand: Tilstand): String {
   // midt i saken får bare fasiten: en rad med «Feil» i rødt for noe hun
   // aldri fikk se, er en dom over feil person.
   val rader =
-    if (utfall == "sent")
+    if (resultat == "sent")
       listOf(
           fasitrad("Utfall", vedtaksord(fasit.vedtak)),
           fasitrad("Hjemmel", fasit.hjemmel),
@@ -1143,9 +1137,9 @@ fun resultatdialog(tilstand: Tilstand): String {
         )
         .joinToString("\n")
 
-  // Toppen bærer utfallet, med dialogens egne farger.
+  // Toppen bærer resultatet, med dialogens egne farger.
   val farge =
-    when (utfall) {
+    when (resultat) {
       "full" -> """ data-color="success""""
       "delvis" -> """ data-color="info""""
       "ingen", "avvik" -> """ data-color="danger""""
@@ -1153,7 +1147,7 @@ fun resultatdialog(tilstand: Tilstand): String {
     }
 
   val innledning =
-    when (utfall) {
+    when (resultat) {
       "sent" ->
         """
         <p class="lt-dialog__subtitle resultat__forklaring">
@@ -1175,7 +1169,7 @@ fun resultatdialog(tilstand: Tilstand): String {
 
   return """
     <lt-dialog id="resultat" open>
-      <dialog class="lt-dialog resultat" data-utfall="$utfall"$farge open>
+      <dialog class="lt-dialog resultat" data-resultat="$resultat"$farge open>
         <div class="lt-dialog__header">
           <h2>${overskrift.trygg()}</h2>
           $innledning
@@ -1187,7 +1181,7 @@ fun resultatdialog(tilstand: Tilstand): String {
 
           $advarsel
 
-          <!-- Nøytral farge med vilje: toppfeltet over bærer utfallet, og to
+          <!-- Nøytral farge med vilje: toppfeltet over bærer resultatet, og to
                fargede flater oppå hverandre gjør det uklart hvilken av dem
                som betyr noe. -->
           <div class="lt-alert">

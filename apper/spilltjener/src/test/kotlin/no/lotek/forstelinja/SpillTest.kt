@@ -405,6 +405,108 @@ class SpillTest {
     assertEquals(listOf(35, 30), topp.map { it.poeng })
   }
 
+  /** Et svar der alt er feil, så det gir null poeng. */
+  private fun alltFeil(spill: Spill): Svar {
+    val fasit = spill.sak.fasit
+    return Svar(
+      vedtak = if (fasit.vedtak == Vedtak.INNVILGET) Vedtak.AVSLATT else Vedtak.INNVILGET,
+      hjemmel = "finnes ikke",
+      kommune = "Bergen",
+      felle = if (fasit.felle == null) "epost" else null,
+    )
+  }
+
+  /** Runden er over, og oppgjøret har begynt. */
+  private suspend fun tilOppgjoret(spill: Spill) {
+    klokke.gaa(RUNDE_MS)
+    spill.tikk()
+  }
+
+  /** Oppgjøret er over, og neste sak er på bordet. */
+  private suspend fun tilNesteSak(spill: Spill) {
+    tilOppgjoret(spill)
+    klokke.gaa(OPPGJOR_MS)
+    spill.tikk()
+  }
+
+  @Test
+  fun `resultatet står tomt mens runden går og du ikke har svart`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+
+    assertNull(spill.tilstand(kari.id).meg?.resultat)
+  }
+
+  @Test
+  fun `et riktig svar gir full pott med én gang, før oppgjøret`() = runTest {
+    // Kvitteringen leser resultatet mens runden fortsatt går.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+    val fasit = spill.sak.fasit
+
+    spill.svar(kari.id, Svar(fasit.vedtak, fasit.hjemmel, spill.sak.soker.kommune, fasit.felle))
+
+    assertEquals(Resultat.FULL, spill.tilstand(kari.id).meg?.resultat)
+  }
+
+  @Test
+  fun `et svar med noen poeng er delvis truffet`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+
+    spill.svar(kari.id, alltFeil(spill).copy(vedtak = spill.sak.fasit.vedtak))
+    tilOppgjoret(spill)
+
+    assertEquals(Resultat.DELVIS, spill.tilstand(kari.id).meg?.resultat)
+  }
+
+  @Test
+  fun `et svar uten poeng gir ingen uttelling`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+
+    spill.svar(kari.id, alltFeil(spill))
+    tilOppgjoret(spill)
+
+    assertEquals(Resultat.INGEN, spill.tilstand(kari.id).meg?.resultat)
+  }
+
+  @Test
+  fun `den som var med på saken og ikke svarte, får et avvik`() = runTest {
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+    tilNesteSak(spill)
+    assertEquals(true, spill.tilstand(kari.id).meg?.medPaSaken)
+
+    tilOppgjoret(spill)
+
+    assertEquals(Resultat.AVVIK, spill.tilstand(kari.id).meg?.resultat)
+  }
+
+  @Test
+  fun `den som kom midt i saken og ikke svarte, kom for sent`() = runTest {
+    val spill = nyttSpill()
+    val sen = spill.bliMed("Sen", Stack.ASTRO)
+    assertEquals(false, spill.tilstand(sen.id).meg?.medPaSaken)
+
+    tilOppgjoret(spill)
+
+    assertEquals(Resultat.SENT, spill.tilstand(sen.id).meg?.resultat)
+  }
+
+  @Test
+  fun `resultatet sendes med de navnene appene leser`() = runTest {
+    // Testene over ser bare enumen i Kotlin. Det appene får er strengen, og
+    // en endret @SerialName ville knekt alle tre uten at noe her merket det.
+    val spill = nyttSpill()
+    val kari = spill.bliMed("Kari", Stack.TANSTACK)
+    spill.svar(kari.id, alltFeil(spill).copy(vedtak = spill.sak.fasit.vedtak))
+
+    val json = tjenerJson.encodeToString(Tilstand.serializer(), spill.tilstand(kari.id))
+
+    assertTrue(json.contains(""""resultat":"delvis""""), "fant ikke resultatet i $json")
+  }
+
   @Test
   fun `den som melder seg på midt i en runde var ikke med på saken`() = runTest {
     val spill = nyttSpill()
