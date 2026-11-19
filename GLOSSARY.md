@@ -35,5 +35,16 @@ Et låst svar er alltid et helt svar: vedtak, hjemmel og fella er besvart, og
 det som er fylt ut finnes. Fella besvares med et feltnavn, eller `nei` for
 «saken er i orden».
 
+**Kapsel**: en cookie. Appene har tre: spillerkapselen (hvem som sitter
+der, én per utgave), temakapselen (`forstelinja-tema`) og velkomstkapselen i
+Astro. Alle skrives med de samme merkene, lokalt og i drift, på serveren og
+i nettleseren: `Path=/; SameSite=None; Secure; Partitioned`. I skallet står
+utgavene i rammer fra andre nettsteder, og uten disse merkene sendes ikke
+kapselen. En sletting må ha de samme merkene, ellers treffer den ikke.
+
+**Billett** (`?spiller=`): lenka til en annen utgave bærer spillerens id, og
+utgaven du kommer til, veksler den inn i sin egen kapsel. Den flytter navnet
+ditt mellom domenene, og mellom skallet og en app som er åpnet alene.
+
 **Med på saken** (`medPaSaken`): spilleren var påmeldt da runden begynte.
 Skiller `avvik` fra `sent`.

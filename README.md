@@ -184,6 +184,7 @@ bun run panel     # at panelet forteller sant om hva som kom over ledningen
 bun run vakthund  # at Datastar-utgaven kommer seg etter en strøm som dør
 bun run skall     # at hilsenen ikke legger seg over rammene i skallet
 bun run skallspill # at tre spillere i skallet får hvert sitt resultat av samme sak
+bun run kapsler   # at de tre utgavene skriver kapslene med de samme merkene
 bun run lotekbruk  # at appene bruker LO-TEK slik dokumentasjonen sier
 bun run klasselikhet # at de tre utgavene bruker de samme klassene
 bun run markup    # at HTML-en appene sender stemmer med LO-TEK
@@ -393,12 +394,17 @@ IPv6-bare, så tjenesten må lytte på `::`. Det er standarden i Dockerfilen.
   på spilltjeneren holder, og en tjeneste med volum får litt nedetid ved
   utrulling. Det er uproblematisk her, siden en omstart uansett starter en ny
   omgang.
-- **Kapslene er merket `SameSite=None; Secure` når siden kommer over https.**
-  Skallet viser de tre i hver sin ramme, og i drift ligger de på hvert sitt
-  domene, så kapselen er en tredjepartskapsel der. Med `Lax` sendte
+- **Kapslene er merket `SameSite=None; Secure; Partitioned`, lokalt og i
+  drift.** Skallet viser de tre i hver sin ramme, og i drift ligger de på
+  hvert sitt domene, så kapselen er en tredjepartskapsel der. Med `Lax` sendte
   nettleseren den aldri: du kunne se spillet i rammen, men ikke melde deg på.
-  Lokalt er alle tre på `localhost`, som er samme nettsted uansett
-  portnummer, og der er `Lax` det eneste som er lov over http.
+  Safari sender den bare med `Partitioned`, fra versjon 26.2. Chromium og
+  WebKit godtar `Secure` på `http://localhost`, så merkene er de samme lokalt,
+  og ingen av appene trenger å vite om de står bak https. Før avgjorde de tre
+  det hver på sin måte, og slettingen og temakapselen i Datastar manglet
+  merkene helt. En sletting må ha de samme
+  merkene som kapselen ble satt med, ellers treffer den ikke.
+  `tester/kapsler.ts` holder de tre i takt.
 - **Billetten i adressen** er det som lar deg beholde navnet ditt når du
   bytter utgave. En kapsel gjelder bare for sitt eget domene, så lenkene
   bærer `?spiller=` og `?tema=`, og appen du kommer til veksler dem inn i

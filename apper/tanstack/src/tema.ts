@@ -1,3 +1,5 @@
+import { settKapsel, slettGammelForm } from "./kapsel"
+
 /**
  * Fargetemaet, som brukeren velger og serveren må kjenne.
  *
@@ -26,12 +28,10 @@ export function lesTema(): Tema {
 
 /** Skriver valget, og setter det på rota med én gang. */
 export function settTema(tema: Tema): void {
-  // `SameSite=None` når siden er på https, ellers `Lax`. Samme grunn som for
-  // spillerkapselen: i skallet står utgavene i hver sin ramme, på hvert sitt
-  // domene, og en `Lax`-kapsel sendes ikke derfra.
-  const tvers =
-    location.protocol === "https:" ? "SameSite=None; Secure" : "SameSite=Lax"
-  document.cookie = `${KAPSEL_TEMA}=${tema}; Path=/; Max-Age=${60 * 60 * 24 * 365}; ${tvers}`
+  // Med de samme merkene som spillerkapselen, se `kapsel.ts`. Den gamle
+  // formen slettes først, så den ikke blir lest i stedet for den nye.
+  document.cookie = slettGammelForm(KAPSEL_TEMA)
+  document.cookie = settKapsel(KAPSEL_TEMA, tema, 60 * 60 * 24 * 365)
   if (tema === "system") document.documentElement.removeAttribute("data-theme")
   else document.documentElement.setAttribute("data-theme", tema)
   merkLenkene(tema)

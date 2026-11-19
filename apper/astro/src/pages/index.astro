@@ -16,6 +16,7 @@ import { APPNAVN, KAPSEL } from "../lib/lotek"
 import { KOMMUNER } from "../lib/kommuner"
 import { svarInn, tilstand as hentTilstand } from "../lib/spilltjener"
 import type { Feil } from "../lib/tilstand"
+import { settKapsel, slettGammelForm } from "../lib/kapsel"
 import { feilFraAvvisning, valider } from "../lib/validering"
 
 export const prerender = false
@@ -38,24 +39,17 @@ export const prerender = false
  */
 const billett = Astro.url.searchParams.get("spiller")
 if (billett) {
-  const https = Astro.url.protocol === "https:"
-  Astro.cookies.set(KAPSEL, billett, {
-    path: "/",
-    maxAge: 8 * 60 * 60,
-    httpOnly: true,
-    sameSite: https ? "none" : "lax",
-    secure: https,
-  })
+  // Hodene skrives selv, som i bli-med.ts: hver kapsel settes, og den gamle
+  // formen slettes, og Astro sender bare én `Set-Cookie` per navn.
+  const hoder = new Headers({ location: "/" })
+  hoder.append("set-cookie", slettGammelForm(KAPSEL))
+  hoder.append("set-cookie", settKapsel(KAPSEL, billett, 8 * 60 * 60, { httpOnly: true }))
   const temaBillett = Astro.url.searchParams.get("tema")
   if (temaBillett === "light" || temaBillett === "dark") {
-    Astro.cookies.set("forstelinja-tema", temaBillett, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: https ? "none" : "lax",
-      secure: https,
-    })
+    hoder.append("set-cookie", slettGammelForm("forstelinja-tema"))
+    hoder.append("set-cookie", settKapsel("forstelinja-tema", temaBillett, 60 * 60 * 24 * 365))
   }
-  return Astro.redirect("/", 303)
+  return new Response(null, { status: 303, headers: hoder })
 }
 
 const spillerId = Astro.cookies.get(KAPSEL)?.value ?? null

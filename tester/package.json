@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "lotekbruk": "bun run lotekbruk.ts",
+    "kapsler": "bun run kapsler.ts",
     "klasselikhet": "bun run klasselikhet.ts",
     "markup": "bun run markup.ts",
     "panel": "bun run panel.ts",

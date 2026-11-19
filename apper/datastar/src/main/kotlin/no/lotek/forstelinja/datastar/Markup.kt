@@ -233,11 +233,10 @@ fun side(
       }
 
       const settTema = (verdi) => {
-        // `SameSite=None` på https: i skallet står utgavene i hver sin ramme,
-        // på hvert sitt domene, og en `Lax`-kapsel sendes ikke derfra.
-        const tvers =
-          location.protocol === "https:" ? "SameSite=None; Secure" : "SameSite=Lax"
-        document.cookie = "forstelinja-tema=" + verdi + "; Path=/; Max-Age=31536000; " + tvers
+        // Med de samme merkene som spillerkapselen, se Kapsel.kt. Den gamle
+        // formen slettes først, så den ikke blir lest i stedet for den nye.
+        document.cookie = "${slettGammelForm("forstelinja-tema")}"
+        document.cookie = "forstelinja-tema=" + verdi + "; Max-Age=31536000; $KAPSELMERKER"
         if (verdi === "system") document.documentElement.removeAttribute("data-theme")
         else document.documentElement.setAttribute("data-theme", verdi)
         merkLenkene(verdi)

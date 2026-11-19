@@ -94,6 +94,10 @@ const { class: listeKlasse, ...liste } = lt.list({ variant: "plain" })
    */
   document.getElementById("velkomst")?.querySelector("dialog")
     ?.addEventListener("close", function () {
-      document.cookie = "forstelinja-velkomst=sett; path=/; max-age=31536000; samesite=lax"
+      // Skriptet står inline og kan ikke importere `lib/kapsel.ts`, så
+      // merkene står her. De er de samme som der, og `tester/kapsler.ts`
+      // holder dem i takt.
+      document.cookie =
+        "forstelinja-velkomst=sett; Max-Age=31536000; Path=/; SameSite=None; Secure; Partitioned"
     })
 </script>

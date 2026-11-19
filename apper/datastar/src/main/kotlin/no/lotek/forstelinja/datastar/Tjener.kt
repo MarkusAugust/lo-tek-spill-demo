@@ -83,22 +83,9 @@ fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) 
        */
       val billett = call.request.queryParameters["spiller"]
       if (billett != null) {
-        val https = call.request.headers["X-Forwarded-Proto"] == "https"
-        call.response.cookies.append(
-          Cookie(
-            KAPSEL,
-            billett,
-            path = "/",
-            maxAge = 8 * 60 * 60,
-            httpOnly = true,
-            secure = https,
-            extensions = mapOf("SameSite" to if (https) "None" else "Lax"),
-          )
-        )
+        call.settKapsel(KAPSEL, billett, 8 * 60 * 60, httpOnly = true)
         call.request.queryParameters["tema"]?.takeIf { it == "light" || it == "dark" }?.let {
-          call.response.cookies.append(
-            Cookie("forstelinja-tema", it, path = "/", maxAge = 60 * 60 * 24 * 365)
-          )
+          call.settKapsel("forstelinja-tema", it, 60 * 60 * 24 * 365)
         }
         call.respondRedirect("/")
         return@get
@@ -168,24 +155,8 @@ fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) 
         }
 
       // Kapsel og ikke minne i nettleseren: Astro-appen laster hele sider på
-      // nytt, og alle tre skal oppføre seg likt.
-      // `SameSite=None` i drift, `Lax` lokalt. Skallet viser de tre utgavene
-      // i hver sin ramme, og i drift ligger de på hvert sitt domene. Da er
-      // kapselen en tredjepartskapsel, og `Lax` gjør at nettleseren aldri
-      // sender den: du kunne se spillet i rammen, men ikke melde deg på.
-      // `None` krever `Secure`, altså https, og det har vi bare i drift.
-      val https = call.request.headers["X-Forwarded-Proto"] == "https"
-      call.response.cookies.append(
-        Cookie(
-          KAPSEL,
-          spiller.spillerId,
-          path = "/",
-          maxAge = 8 * 60 * 60,
-          httpOnly = true,
-          secure = https,
-          extensions = mapOf("SameSite" to if (https) "None" else "Lax"),
-        )
-      )
+      // nytt, og alle tre skal oppføre seg likt. Merkene står i Kapsel.kt.
+      call.settKapsel(KAPSEL, spiller.spillerId, 8 * 60 * 60, httpOnly = true)
 
       // Og så en omdirigering, ikke en patch. Hendelsesstrømmen leser
       // kapselen når den åpnes, én gang, så den må åpnes på nytt for at
@@ -202,7 +173,7 @@ fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) 
     post("/ga-av") {
       val spillerId = call.request.cookies[KAPSEL]
       if (spillerId != null) runCatching { spilltjener.gaAv(spillerId) }
-      call.response.cookies.append(Cookie(KAPSEL, "", path = "/", maxAge = 0))
+      call.slettKapsel(KAPSEL)
       call.respondText("ok")
     }
 

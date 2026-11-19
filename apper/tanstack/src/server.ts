@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server"
 
+import { settKapsel, slettGammelForm, slettKapsel } from "./kapsel"
 import { KOMMUNER } from "./kommuner"
 import { KAPSEL, bliMed, erTest, gaAv, pulsen, svarInn, tilstand } from "./spilltjener"
 import type { Skjermbilde } from "./tilstand"
@@ -56,24 +57,6 @@ const PANEL_AVLYTT_JS: string = readFileSync(
   process.env.PANEL_AVLYTT_JS_FIL ?? "../../felles/panel-avlytt.js",
   "utf8",
 )
-
-/**
- * Hvordan kapselen skal merkes.
- *
- * `SameSite=Lax` er riktig når appen står alene, men skallet viser de tre
- * utgavene i hver sin ramme, og i drift ligger de på hvert sitt domene. Da
- * er kapselen en tredjepartskapsel, og `Lax` gjør at nettleseren aldri
- * sender den: du kunne se spillet i rammen, men ikke melde deg på.
- * `None` krever `Secure`, altså https, og det har vi bare i drift. Lokalt
- * er alle tre på `localhost`, som er samme nettsted uansett portnummer, og
- * der holder `Lax`.
- */
-function kapselTvers(request: Request): string {
-  const https =
-    request.headers.get("x-forwarded-proto") === "https" ||
-    new URL(request.url).protocol === "https:"
-  return https ? "SameSite=None; Secure" : "SameSite=Lax"
-}
 
 function kapsel(request: Request, navn: string): string | null {
   const rad = request.headers.get("cookie")
@@ -165,13 +148,13 @@ export default {
     const billett = url.pathname === "/" ? url.searchParams.get("spiller") : null
     if (billett) {
       const tema = url.searchParams.get("tema")
+      // Den gamle formen slettes først, så den ikke leses i stedet for den nye.
       const kapsler = [
-        `${KAPSEL}=${billett}; Path=/; Max-Age=${8 * 60 * 60}; HttpOnly; ${kapselTvers(request)}`,
+        slettGammelForm(KAPSEL),
+        settKapsel(KAPSEL, billett, 8 * 60 * 60, { httpOnly: true }),
       ]
       if (tema === "light" || tema === "dark") {
-        kapsler.push(
-          `${KAPSEL_TEMA}=${tema}; Path=/; Max-Age=${60 * 60 * 24 * 365}; ${kapselTvers(request)}`,
-        )
+        kapsler.push(slettGammelForm(KAPSEL_TEMA), settKapsel(KAPSEL_TEMA, tema, 60 * 60 * 24 * 365))
       }
       const hoder = new Headers({ location: "/" })
       for (const k of kapsler) hoder.append("set-cookie", k)
@@ -214,13 +197,10 @@ export default {
 
       // Kapsel og ikke minne i nettleseren: Astro-appen laster hele sider på
       // nytt, og alle tre skal oppføre seg likt.
-      return new Response(null, {
-        status: 303,
-        headers: {
-          location: "/",
-          "set-cookie": `${KAPSEL}=${spiller.spillerId}; Path=/; Max-Age=${8 * 60 * 60}; HttpOnly; ${kapselTvers(request)}`,
-        },
-      })
+      const hoder = new Headers({ location: "/" })
+      hoder.append("set-cookie", slettGammelForm(KAPSEL))
+      hoder.append("set-cookie", settKapsel(KAPSEL, spiller.spillerId, 8 * 60 * 60, { httpOnly: true }))
+      return new Response(null, { status: 303, headers: hoder })
     }
 
     /*
@@ -232,9 +212,9 @@ export default {
     if (url.pathname === "/ga-av" && request.method === "POST") {
       const spillerId = kapsel(request, KAPSEL)
       if (spillerId) await gaAv(spillerId).catch(() => {})
-      return new Response("ok", {
-        headers: { "set-cookie": `${KAPSEL}=; Path=/; Max-Age=0` },
-      })
+      const hoder = new Headers()
+      for (const k of slettKapsel(KAPSEL)) hoder.append("set-cookie", k)
+      return new Response("ok", { headers: hoder })
     }
 
     if (url.pathname === "/svar" && request.method === "POST") {

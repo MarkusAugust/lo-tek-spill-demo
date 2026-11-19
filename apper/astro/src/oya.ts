@@ -1,3 +1,4 @@
+import { settKapsel, slettGammelForm } from "./lib/kapsel"
 import { defineLt } from "@lo-tek/interfaces/register"
 
 import { tavlekropp } from "./lib/tavle"
@@ -34,11 +35,10 @@ for (const knapp of document.querySelectorAll<HTMLInputElement>('input[name="tem
   knapp.checked = knapp.value === valgt
   knapp.addEventListener("change", () => {
     if (!knapp.checked) return
-    // `SameSite=None` på https: i skallet står utgavene i hver sin ramme, på
-    // hvert sitt domene, og en `Lax`-kapsel sendes ikke derfra.
-    const tvers =
-      location.protocol === "https:" ? "SameSite=None; Secure" : "SameSite=Lax"
-    document.cookie = `forstelinja-tema=${knapp.value}; Path=/; Max-Age=${60 * 60 * 24 * 365}; ${tvers}`
+    // Med de samme merkene som spillerkapselen, se `lib/kapsel.ts`. Den
+    // gamle formen slettes først, så den ikke blir lest i stedet.
+    document.cookie = slettGammelForm("forstelinja-tema")
+    document.cookie = settKapsel("forstelinja-tema", knapp.value, 60 * 60 * 24 * 365)
     if (knapp.value === "system") document.documentElement.removeAttribute("data-theme")
     else document.documentElement.setAttribute("data-theme", knapp.value)
     merkLenkene(knapp.value)
