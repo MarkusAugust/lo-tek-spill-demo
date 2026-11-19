@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-REPO="${REPO:-MarkusAugust/fristil-spill-demo}"
+REPO="${REPO:-MarkusAugust/lo-tek-spill-demo}"
 GREN="${GREN:-master}"
 PROSJEKT="${PROSJEKT:-forstelinja}"
 MILJO="${MILJO:-production}"

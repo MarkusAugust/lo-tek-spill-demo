@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import { feltnavn, stor, vedtaksord } from "../lib/tekst"
 import type { Tilstand } from "../lib/tilstand"
@@ -94,14 +94,14 @@ const farge =
       : utfall === "ingen" || utfall === "avvik"
         ? "danger"
         : "neutral"
-const boks = fs.dialog({ titleId: "resultat-tittel", open: vis, color: farge })
+const boks = lt.dialog({ titleId: "resultat-tittel", open: vis, color: farge })
 const { class: dialogKlasse, ...dialog } = boks.dialog
 const { class: undertekstKlasse, ...undertekst } = boks.subtitle
 ---
 
 {
   vis && meg && fasit ? (
-    <fs-dialog id="resultat" open="">
+    <lt-dialog id="resultat" open="">
       <dialog {...dialog} class={`${dialogKlasse} resultat`} data-utfall={utfall}>
         <div {...boks.header}>
           <h2 {...boks.title}>{overskrift}</h2>
@@ -156,18 +156,18 @@ const { class: undertekstKlasse, ...undertekst } = boks.subtitle
           {/* Nøytral farge med vilje: toppfeltet over bærer utfallet, og to
               fargede flater oppå hverandre gjør det uklart hvilken av dem som
               betyr noe. */}
-          <div {...fs.alert()}>
-            <p class={fs.alert.title}>Sak {tilstand.sak.id}</p>
+          <div {...lt.alert()}>
+            <p class={lt.alert.title}>Sak {tilstand.sak.id}</p>
             <p>{tilstand.forklaring ?? ""}</p>
           </div>
         </div>
 
         <form method="dialog" {...boks.footer}>
-          <button {...fs.button()} value="lukk">Lukk</button>
+          <button {...lt.button()} value="lukk">Lukk</button>
         </form>
       </dialog>
-    </fs-dialog>
+    </lt-dialog>
   ) : (
-    <fs-dialog id="resultat" />
+    <lt-dialog id="resultat" />
   )
 }

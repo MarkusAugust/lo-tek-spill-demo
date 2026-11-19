@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import BliMed from "../components/BliMed.astro"
 import Kvittering from "../components/Kvittering.astro"
@@ -12,7 +12,7 @@ import Tavle from "../components/Tavle.astro"
 import Topplinje from "../components/Topplinje.astro"
 import Vedtakskort from "../components/Vedtakskort.astro"
 import Velkomst from "../components/Velkomst.astro"
-import { APPNAVN, KAPSEL } from "../lib/fristil"
+import { APPNAVN, KAPSEL } from "../lib/lotek"
 import { KOMMUNER } from "../lib/kommuner"
 import { svarInn, tilstand as hentTilstand } from "../lib/spilltjener"
 import type { Feil } from "../lib/tilstand"
@@ -71,7 +71,7 @@ const harSettVelkomst = Astro.cookies.get("forstelinja-velkomst")?.value === "se
  * veiene virker. Over vanlig http mot en maskin på nettet kommer hilsenen
  * tilbake i rammene.
  */
-const { class: kortKlasse, ...kort } = fs.card()
+const { class: kortKlasse, ...kort } = lt.card()
 
 const iRamme = Astro.request.headers.get("sec-fetch-dest") === "iframe"
 // `append` og ikke `set`: Astro setter selv `Vary` for økter, og den skal
@@ -163,8 +163,8 @@ try {
     <Side tittel={`Førstelinja · ${APPNAVN}`}>
       {tilstand.meg === null && !harSettVelkomst && !iRamme && <Velkomst />}
 
-      <fs-connection-status
-        {...fs.connectionStatus()}
+      <lt-connection-status
+        {...lt.connectionStatus()}
         offline-text="Sambandet til etaten er nede"
         online-text="Sambandet er tilbake"
       />
@@ -207,9 +207,9 @@ try {
               }
             </div>
 
-            <aside id="tavle" {...kort} class={`${kortKlasse} kort tavle`}>
+            <section id="tavle" {...kort} class={`${kortKlasse} kort tavle`} aria-labelledby="tavle-tittel">
               <Tavle tilstand={tilstand} />
-            </aside>
+            </section>
 
             <Resultatdialog tilstand={tilstand} />
           </div>

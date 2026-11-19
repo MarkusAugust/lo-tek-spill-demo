@@ -1,4 +1,4 @@
-import { defineFs } from "@fristil/designsystem/register"
+import { defineLt } from "@lo-tek/interfaces/register"
 
 import { tavlekropp } from "./lib/tavle"
 import type { TavleRad } from "./lib/tilstand"
@@ -19,7 +19,7 @@ import type { TavleRad } from "./lib/tilstand"
  * ingen tilstand. Det ligger i serveren, og skjemaet er en vanlig POST.
  */
 
-defineFs()
+defineLt()
 
 /* --- Temaet ------------------------------------------------------- */
 
@@ -166,7 +166,7 @@ const brett = document.getElementById("brett")
 const status = () =>
   document.querySelector<
     HTMLElement & { reportFailure(): void; reportSuccess(): void }
-  >("fs-connection-status")
+  >("lt-connection-status")
 
 if (brett) {
   const kilde = new EventSource("/hendelser")

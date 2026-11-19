@@ -1,5 +1,5 @@
 ---
-import { fs } from "@fristil/designsystem"
+import { lt } from "@lo-tek/interfaces"
 
 import type { Tilstand } from "../lib/tilstand"
 
@@ -31,15 +31,15 @@ const linjer: [string, boolean, number][] = vurdering
     ]
   : []
 
-const { class: kortKlasse, ...kort } = fs.card()
-const { class: listeKlasse, ...liste } = fs.list({ variant: "plain" })
+const { class: kortKlasse, ...kort } = lt.card()
+const { class: listeKlasse, ...liste } = lt.list({ variant: "plain" })
 ---
 
 <section {...kort} class={`${kortKlasse} kort vedtakskort`}>
-  <h2 {...fs.heading({ size: "s" })}>Vedtaket er fattet</h2>
+  <h2 {...lt.heading({ size: "s" })}>Vedtaket er fattet</h2>
 
-  <div {...fs.alert({ color: farge })}>
-    <p class={fs.alert.title}>{overskrift}</p>
+  <div {...lt.alert({ color: farge })}>
+    <p class={lt.alert.title}>{overskrift}</p>
     <p>Du fikk <strong>{poeng} av {full} poeng</strong> på denne saken.</p>
   </div>
 

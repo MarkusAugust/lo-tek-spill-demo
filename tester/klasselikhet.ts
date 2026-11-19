@@ -1,11 +1,11 @@
 import { chromium } from "playwright"
 
 /**
- * At de tre utgavene bruker de samme Fristil-klassene.
+ * At de tre utgavene bruker de samme LO-TEK-klassene.
  *
  * `paritet.ts` sjekker at de oppfører seg likt: roller, ledetekster og at
  * knappene virker. Den så ikke at TanStack-temavelgeren mistet
- * `fs-toggle-group` og ble en kolonne uten ramme, for den fant fortsatt tre
+ * `lt-toggle-group` og ble en kolonne uten ramme, for den fant fortsatt tre
  * knapper med riktig tekst. Skjermen var synlig ødelagt, og alle tre
  * vaktpostene var grønne.
  *
@@ -42,14 +42,14 @@ const APPER = [
  * Kvitteringen er en modal som lukkes igjen, forslagslista tegnes bare mens
  * feltet har fokus, og oppgjøret varer i tolv sekunder. Et oppslag til slutt
  * ville sett ingen av dem. Observatøren legges inn før noe skript på siden
- * kjører, og husker hver `fs-`-klasse den har sett.
+ * kjører, og husker hver `lt-`-klasse den har sett.
  */
 const SAMLER = `
   window.__fsKlasser = new Set()
   const se = (node) => {
     if (!(node instanceof Element)) return
     for (const el of [node, ...node.querySelectorAll("[class]")])
-      for (const k of el.classList) if (k.startsWith("fs-")) window.__fsKlasser.add(k)
+      for (const k of el.classList) if (k.startsWith("lt-")) window.__fsKlasser.add(k)
   }
   // Observatøren settes på \`document\`, ikke på \`document.documentElement\`.
   // Skriptet kjører før siden er parset, og da finnes rotelementet ikke ennå:
@@ -94,9 +94,9 @@ const sett = new Map<string, Set<string>>()
  * Og klassene felt for felt, nøklet på ledeteksten.
  *
  * Ett sett for hele siden så ikke at hjelpeteksten og feilmeldingen under
- * kommunefeltet manglet `fs-help-text` og `fs-error-text` i TanStack og
- * Astro. `fs.suggestion().help` gir bare en id, og klassen må komme fra
- * `fs.helpText()` ved siden av. Begge klassene fantes på andre felt i de
+ * kommunefeltet manglet `lt-help-text` og `lt-error-text` i TanStack og
+ * Astro. `lt.suggestion().help` gir bare en id, og klassen må komme fra
+ * `lt.helpText()` ved siden av. Begge klassene fantes på andre felt i de
  * samme utgavene, så settet for siden var likt, mens teksten under feltet
  * var stor og mørk i to av tre.
  *
@@ -132,12 +132,12 @@ try {
         klasser.add(k)
       const naa = await side
         .evaluate(() =>
-          [...document.querySelectorAll("fs-field, fs-suggestion, fieldset")].map(
+          [...document.querySelectorAll("lt-field, lt-suggestion, fieldset")].map(
             (vert) => {
               const tekst = vert.querySelector("label, legend")?.textContent ?? ""
               const ks = new Set<string>()
               for (const el of [vert, ...vert.querySelectorAll("[class]")])
-                for (const k of el.classList) if (k.startsWith("fs-")) ks.add(k)
+                for (const k of el.classList) if (k.startsWith("lt-")) ks.add(k)
               return [tekst.replace(/\s+/g, " ").trim(), [...ks]] as const
             },
           ),
@@ -229,20 +229,20 @@ try {
            * Et tomt vedtak først, som skal avvises.
            *
            * Uten dette rendres feilmeldingene og feiloppsummeringen aldri, og
-           * `.fs-error-text` og `.fs-error-summary__title` sto utenfor det
+           * `.lt-error-text` og `.lt-error-summary__title` sto utenfor det
            * sjekken så. Valideringen er nettopp der de tre utgavene gjør mest
            * ulikt: Datastar får en patch fra serveren, Astro laster siden på
            * nytt, og React tegner om i nettleseren.
            *
            * Kommunefeltet får et navn som ikke er en kommune. Et tomt felt er
            * gyldig, så uten det ble feilmeldingen under kommunefeltet aldri
-           * rendret, og at den manglet `fs-error-text` i to utgaver kunne
+           * rendret, og at den manglet `lt-error-text` i to utgaver kunne
            * ikke felles.
            */
           await side.locator("#kommune").fill("Inder", { timeout: 10_000 })
           await side.getByRole("button", { name: "Fatt vedtak" }).click({ timeout: 10_000 })
           await side
-            .locator(".fs-error-summary, fs-error-summary:not([hidden])")
+            .locator(".lt-error-summary, lt-error-summary:not([hidden])")
             .first()
             .waitFor({ timeout: 10_000 })
           await samle()
@@ -309,10 +309,10 @@ try {
        * Og resultatet, når runden er gjort opp.
        *
        * Dialogen kom bare med når testen tilfeldigvis landet i et oppgjør,
-       * og da bare i den ene utgaven det skjedde i. `.fs-dialog__subtitle`
+       * og da bare i den ene utgaven det skjedde i. `.lt-dialog__subtitle`
        * ble meldt som «finnes bare i datastar» i to av fem kjøringer, mens
        * alle tre skriver den. Ventingen koster resten av runden, og
-       * resultatdialogen er nettopp komponenten demoen fikk inn i Fristil.
+       * resultatdialogen er nettopp komponenten demoen fikk inn i LO-TEK.
        */
       await kvittering.waitFor({ timeout: RUNDEVINDU })
       await lukkKvittering()
@@ -354,7 +354,7 @@ const sammenlignes = APPER.filter((a) => fullfort.has(a.navn))
  *
  * Observatøren sto en stund på et rotelement som ikke fantes ennå, og da
  * kastet den. Sjekken fant null klasser i alle tre, alle tre var like, og
- * den skrev «De tre utgavene bruker de samme 0 Fristil-klassene». En
+ * den skrev «De tre utgavene bruker de samme 0 LO-TEK-klassene». En
  * vaktpost som ikke kan feile sier ingenting.
  *
  * Tallet er satt under det løpet faktisk finner, med litt slark, siden gulvet
@@ -366,7 +366,7 @@ for (const app of sammenlignes) {
   const antall = sett.get(app.navn)?.size ?? 0
   if (antall < GULV)
     funn.push(
-      `${app.navn}: samlet bare ${antall} Fristil-klasser gjennom hele løpet, og det er for få til at sjekken sier noe`,
+      `${app.navn}: samlet bare ${antall} LO-TEK-klasser gjennom hele løpet, og det er for få til at sjekken sier noe`,
     )
 }
 
@@ -435,5 +435,5 @@ if (funn.length > 0) {
 console.log(
   `De ${sammenlignes.length} utgavene bruker de samme ${
     sett.get(sammenlignes[0].navn)?.size ?? 0
-  } Fristil-klassene.`,
+  } LO-TEK-klassene.`,
 )

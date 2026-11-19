@@ -15,14 +15,14 @@
  * Appen henter den og sier hvilken teknikk den bruker:
  *
  *     const { startPanel } = await import("/panel.js")
- *     startPanel({ teknikk: "…", forklaring: "…", utgave: "datastar", fs })
+ *     startPanel({ teknikk: "…", forklaring: "…", utgave: "datastar", lt })
  *
  * Datastar-utgaven skriver et vanlig `import` i et modulskript. De to andre
  * bruker `import()` med adressen i en variabel: Vite leser et bokstavelig
  * `import` og prøver å slå opp `/panel.js` under bygget, og den er en rute på
  * serveren og ingen fil på disken.
  *
- * `fs` sendes inn framfor å importeres her. Fila er delt av tre apper med
+ * `lt` sendes inn framfor å importeres her. Fila er delt av tre apper med
  * hvert sitt spor: to bunter designsystemet og har det allerede, én henter
  * det fra CDN. Importerte panelet det selv, måtte adressen være en URL, og
  * da fikk de to buntede appene en ekstern avhengighet i drift for et
@@ -41,22 +41,22 @@
  */
 
 /**
- * Byggefunksjonene fra Fristil. Appen sender dem inn i `startPanel`, og de to
+ * Byggefunksjonene fra LO-TEK. Appen sender dem inn i `startPanel`, og de to
  * funksjonene som skriver markup leser dem herfra.
  */
-let fs = null
+let lt = null
 
 /**
  * Skriver ut alt en byggefunksjon ga, ikke bare klassen.
  *
- * `fs.button({ variant: "ghost" })` gir både `class` og `data-variant`, og
+ * `lt.button({ variant: "ghost" })` gir både `class` og `data-variant`, og
  * panelet skrev lenge av det siste for hånd ved siden av det første. Da er vi
  * tilbake til det dokumentasjonen advarer mot: endrer pakken attributtnavnet,
  * følger klassen med og attributtet blir stående.
  *
  * Appens egen klasse legges til på slutten, slik `med()` gjør i TanStack-appen.
  *
- * Boolske verdier følger `fs.setAttributes` i pakken: `true` blir et attributt
+ * Boolske verdier følger `lt.setAttributes` i pakken: `true` blir et attributt
  * uten verdi, `false` og `undefined` blir ingenting. Uten det skrev hjelperen
  * `hidden="false"`, som er et sant boolsk attributt, og elementet ble skjult av
  * nettopp det som skulle vise det. Ingen byggefunksjon sender `false` i dag,
@@ -106,7 +106,7 @@ const HELE_SIDEN = "siden"
  * dette fylte den hele loggen med den samme linja, ett sekund om gangen, og
  * de ekte oppdateringene forsvant i den.
  */
-const STOY = [".nedtelling", "[data-nedtelling]", "fs-connection-status"]
+const STOY = [".nedtelling", "[data-nedtelling]", "lt-connection-status"]
 
 /**
  * Nøkkelen panelet husker seg selv under.
@@ -175,7 +175,7 @@ function erStoy(node) {
  * én tabell, og de ville gått fra hverandre første gang noen endret en av
  * dem.
  */
-const REPO = "https://github.com/MarkusAugust/fristil-spill-demo"
+const REPO = "https://github.com/MarkusAugust/lo-tek-spill-demo"
 
 const UTGAVER = [
   {
@@ -418,8 +418,8 @@ function utgavetabell() {
   ).join("")
 
   return `
-    <div class="${fs.table.scroll}" tabindex="0">
-      <table ${attributter(fs.table(), "panel__tabell")}>
+    <div class="${lt.table.scroll}" tabindex="0">
+      <table ${attributter(lt.table(), "panel__tabell")} aria-label="De tre utgavene">
         <thead>
           <tr>
             <th>Utgave</th>
@@ -431,7 +431,7 @@ function utgavetabell() {
         <tbody>${rader}</tbody>
       </table>
     </div>
-    <ul ${attributter(fs.list(), "panel__felles")}>
+    <ul ${attributter(lt.list(), "panel__felles")}>
       ${FELLES.map((linje) => `<li>${linje}</li>`).join("")}
     </ul>
     <p class="panel__felles">
@@ -442,26 +442,26 @@ function utgavetabell() {
 }
 
 /**
- * Panelets egen markup. Fristils klasser, ingen egne farger.
+ * Panelets egen markup. LO-TEKs klasser, ingen egne farger.
  *
  * Verten kan finnes fra før. I React er `document.body` en del av
  * komponenttreet, og en strukturell rendring kaster bort noder React ikke vet
  * om: panelet sto der ved innlasting og var borte i det brukeren meldte seg
  * på. Rendrer appen verten selv, beholder React den, og panelet fyller den
- * ut. Det er den samme regelen komponentene i Fristil følger.
+ * ut. Det er den samme regelen komponentene i LO-TEK følger.
  */
 function byggPanel() {
   const vert =
     document.querySelector(".panelvert") ?? document.createElement("div")
   vert.className = "panelvert"
   vert.innerHTML = `
-    <button type="button" ${attributter(fs.button(), "panelknapp")} aria-expanded="false"
+    <button type="button" ${attributter(lt.button(), "panelknapp")} aria-expanded="false"
             aria-controls="panel">Hva skjedde?</button>
-    <section id="panel" ${attributter(fs.card(), "panel")} hidden aria-label="Hva skjedde">
+    <section id="panel" ${attributter(lt.card(), "panel")} hidden aria-label="Hva skjedde">
       <div class="panel__del panel__del--hva">
-        <h2 ${attributter(fs.heading({ size: "xs" }), "panel__tittel")}>
+        <h2 ${attributter(lt.heading({ size: "xs" }), "panel__tittel")}>
           Med hva
-          <button type="button" ${attributter(fs.button({ variant: "ghost" }), "panel__hjelp")}
+          <button type="button" ${attributter(lt.button({ variant: "ghost" }), "panel__hjelp")}
                   aria-expanded="false" aria-controls="panel-utgaver"
                   aria-label="Hvordan de tre utgavene henter data">?</button>
         </h2>
@@ -472,13 +472,13 @@ function byggPanel() {
         <pre class="panel__nyttelast" tabindex="0"></pre>
       </div>
       <div class="panel__del panel__del--logg">
-        <h2 ${attributter(fs.heading({ size: "xs" }), "panel__tittel")}>Hva som ble oppdatert</h2>
-        <ol ${attributter(fs.list({ variant: "plain" }), "panel__logg")}></ol>
+        <h2 ${attributter(lt.heading({ size: "xs" }), "panel__tittel")}>Hva som ble oppdatert</h2>
+        <ol ${attributter(lt.list({ variant: "plain" }), "panel__logg")}></ol>
       </div>
       <div class="panel__del panel__del--hvordan">
-        <h2 ${attributter(fs.heading({ size: "xs" }), "panel__tittel")}>Hvordan</h2>
-        <p ${attributter(fs.paragraph(), "panel__teknikk")}></p>
-        <p ${attributter(fs.paragraph({ size: "small" }), "panel__forklaring")}></p>
+        <h2 ${attributter(lt.heading({ size: "xs" }), "panel__tittel")}>Hvordan</h2>
+        <p ${attributter(lt.paragraph(), "panel__teknikk")}></p>
+        <p ${attributter(lt.paragraph({ size: "small" }), "panel__forklaring")}></p>
       </div>
     </section>`
   if (!vert.isConnected) document.body.append(vert)
@@ -594,11 +594,11 @@ function tegn() {
  * Starter panelet.
  *
  * `teknikk` er én setning om hvordan denne utgaven oppdaterer seg, og
- * `forklaring` er linja under, som sier hva det betyr i praksis. `fs` er
- * Fristils byggefunksjoner, hentet slik appen ellers henter dem. Alt annet
+ * `forklaring` er linja under, som sier hva det betyr i praksis. `lt` er
+ * LO-TEKs byggefunksjoner, hentet slik appen ellers henter dem. Alt annet
  * finner panelet ut selv.
  */
-export function startPanel({ teknikk, forklaring, utgave, fs: byggere }) {
+export function startPanel({ teknikk, forklaring, utgave, lt: byggere }) {
   if (vertselement) return
 
   /*
@@ -608,12 +608,12 @@ export function startPanel({ teknikk, forklaring, utgave, fs: byggere }) {
    */
   if (!byggere) {
     console.warn(
-      "Panelet ble ikke bygget: `fs` mangler i kallet til startPanel(). " +
-        "Appen skal sende byggefunksjonene: startPanel({ …, fs }).",
+      "Panelet ble ikke bygget: `lt` mangler i kallet til startPanel(). " +
+        "Appen skal sende byggefunksjonene: startPanel({ …, lt }).",
     )
     return
   }
-  fs = byggere
+  lt = byggere
 
   tilstand.teknikk = teknikk
   tilstand.forklaring = forklaring

@@ -29,9 +29,9 @@ const BRETT_CSS: string = readFileSync(
 )
 
 /**
- * Temaet, generert av Fristil av `felles/fristil.tema.json`.
+ * Temaet, generert av LO-TEK av `felles/lotek.theme.json`.
  *
- * Det setter skrift og form, og lar fargene stå: Fristils egen palett er
+ * Det setter skrift og form, og lar fargene stå: LO-TEKs egen palett er
  * allerede Skatteetatens, med de samme verdiene.
  */
 const TEMA_CSS: string = readFileSync(

@@ -202,7 +202,7 @@ async function sjekkGjenoppkobling(navn: string, motor: BrowserType) {
       await side
         .waitForFunction(
           () =>
-            typeof (document.querySelector("fs-connection-status") as { reportFailure?: unknown } | null)
+            typeof (document.querySelector("lt-connection-status") as { reportFailure?: unknown } | null)
               ?.reportFailure === "function",
           undefined,
           { timeout: 15000 },
@@ -220,7 +220,7 @@ async function sjekkGjenoppkobling(navn: string, motor: BrowserType) {
     await side.locator(".nedtelling[data-klokke]").waitFor({ timeout: 20000 })
 
     // Seks sekunder fra strømmen sluttet, ikke fra siden kom: Datastar og
-    // Fristil hentes fra CDN i en kald nettleser, og det er ikke appens
+    // LO-TEK hentes fra CDN i en kald nettleser, og det er ikke appens
     // ventetid. Tretti sekunder er grensen for hele løpet.
     const start = Date.now()
     while (hentinger.length < 2 && Date.now() - start < 30000) {

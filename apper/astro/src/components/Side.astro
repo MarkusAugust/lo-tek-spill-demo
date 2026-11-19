@@ -5,29 +5,29 @@
  * Alt her sendes ferdig fra serveren. Det eneste skriptet er øya nederst,
  * og temaet, som må stå før siden tegnes.
  */
-import "@fristil/designsystem/tokens.css"
-import "@fristil/designsystem/field.css"
-import "@fristil/designsystem/tabs.css"
-import "@fristil/designsystem/popover.css"
-import "@fristil/designsystem/error-summary.css"
-import "@fristil/designsystem/suggestion.css"
-import "@fristil/designsystem/dialog.css"
-import "@fristil/designsystem/connection-status.css"
-import "@fristil/designsystem/button.css"
-import "@fristil/designsystem/select.css"
-import "@fristil/designsystem/radio.css"
-import "@fristil/designsystem/fieldset.css"
-import "@fristil/designsystem/table.css"
-import "@fristil/designsystem/card.css"
-import "@fristil/designsystem/avatar.css"
-import "@fristil/designsystem/badge.css"
-import "@fristil/designsystem/tag.css"
-import "@fristil/designsystem/toggle-group.css"
-import "@fristil/designsystem/alert.css"
-import "@fristil/designsystem/heading.css"
-import "@fristil/designsystem/paragraph.css"
-import "@fristil/designsystem/list.css"
-import "@fristil/designsystem/sr-only.css"
+import "@lo-tek/interfaces/tokens.css"
+import "@lo-tek/interfaces/field.css"
+import "@lo-tek/interfaces/tabs.css"
+import "@lo-tek/interfaces/popover.css"
+import "@lo-tek/interfaces/error-summary.css"
+import "@lo-tek/interfaces/suggestion.css"
+import "@lo-tek/interfaces/dialog.css"
+import "@lo-tek/interfaces/connection-status.css"
+import "@lo-tek/interfaces/button.css"
+import "@lo-tek/interfaces/select.css"
+import "@lo-tek/interfaces/radio.css"
+import "@lo-tek/interfaces/fieldset.css"
+import "@lo-tek/interfaces/table.css"
+import "@lo-tek/interfaces/card.css"
+import "@lo-tek/interfaces/avatar.css"
+import "@lo-tek/interfaces/badge.css"
+import "@lo-tek/interfaces/tag.css"
+import "@lo-tek/interfaces/toggle-group.css"
+import "@lo-tek/interfaces/alert.css"
+import "@lo-tek/interfaces/heading.css"
+import "@lo-tek/interfaces/paragraph.css"
+import "@lo-tek/interfaces/list.css"
+import "@lo-tek/interfaces/sr-only.css"
 
 interface Props {
   tittel: string
@@ -53,8 +53,8 @@ const tema = valgt === "light" || valgt === "dark" ? valgt : null
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{tittel}</title>
-    <!-- Temaet ligger i sitt eget lag, `fristil-tema`, erklært etter
-         `fristil`. Det avgjør rekkefølgen uansett når stilarkene lastes, og
+    <!-- Temaet ligger i sitt eget lag, `lotek-theme`, erklært etter
+         `lotek`. Det avgjør rekkefølgen uansett når stilarkene lastes, og
          det er nødvendig her: Astro legger sin bundlede CSS inn rett før
          </head>, altså etter denne lenken. -->
     <link rel="stylesheet" href="/tema.css" />
@@ -72,7 +72,7 @@ const tema = valgt === "light" || valgt === "dark" ? valgt : null
 
     <!-- Panelet som viser hva som ble oppdatert. Felles fil, egen teknikk.
 
-         Skriptet buntes, slik at `fs` kan hentes fra pakken appen allerede
+         Skriptet buntes, slik at `lt` kan hentes fra pakken appen allerede
          har. Panelet importerer ikke byggefunksjonene selv: det er delt med
          Datastar-utgaven, som henter alt fra CDN, og da måtte adressen vært
          en URL. Denne appen ville i så fall fått et tredjepartskall i drift
@@ -82,7 +82,7 @@ const tema = valgt === "light" || valgt === "dark" ? valgt : null
          Vite leser et bokstavelig `import` og prøver å slå den opp under
          bygget, så adressen står i en variabel, med `@vite-ignore` i tillegg. -->
     <script>
-      import { fs } from "@fristil/designsystem"
+      import { lt } from "@lo-tek/interfaces"
 
       const PANELMODUL = "/panel.js"
 
@@ -92,7 +92,7 @@ const tema = valgt === "light" || valgt === "dark" ? valgt : null
           forklaring:
             "Et vedtak er en vanlig innsending, og svaret er en ny side. Bare tavla oppdaterer seg uten det, fra en hendelsesstrøm som bytter ut tabellkroppen.",
           utgave: "astro",
-          fs,
+          lt,
         }),
       )
     </script>

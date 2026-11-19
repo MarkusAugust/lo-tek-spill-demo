@@ -21,5 +21,5 @@
   </root>
 
   <logger name="io.ktor" level="WARN" />
-  <logger name="no.fristil" level="INFO" />
+  <logger name="no.lotek" level="INFO" />
 </configuration>

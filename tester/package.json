@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "fristilbruk": "bun run fristilbruk.ts",
+    "lotekbruk": "bun run lotekbruk.ts",
     "klasselikhet": "bun run klasselikhet.ts",
     "markup": "bun run markup.ts",
     "panel": "bun run panel.ts",
@@ -11,11 +11,11 @@
     "samtidig": "bun run samtidig.ts",
     "skall": "bun run skall.ts",
     "sloyfe": "bun run sloyfe.ts",
-    "tema": "bunx @fristil/designsystem@0.34.0 tema ../felles/fristil.tema.json --ut=../felles/tema.css",
+    "tema": "bunx @lo-tek/interfaces@0.46.0 theme ../felles/lotek.theme.json --out=../felles/tema.css",
     "vakthund": "bun run vakthund.ts"
   },
   "devDependencies": {
-    "@fristil/designsystem": "0.34.0",
+    "@lo-tek/interfaces": "0.46.0",
     "playwright": "^1.60.0"
   }
 }

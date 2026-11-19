@@ -1,6 +1,6 @@
 # Førstelinja
 
-Et spill som viser at det samme designsystemet, [Fristil](https://github.com/MarkusAugust/fristil), gir identisk brukergrensesnitt i tre helt ulike teknologier.
+Et spill som viser at det samme designsystemet, [LO-TEK](https://github.com/MarkusAugust/lo-tek), gir identisk brukergrensesnitt i tre helt ulike teknologier.
 
 Alle spillerne er saksbehandlere i samme etat og behandler de samme sakene samtidig. Tavla viser hvilken app hver spiller sitter i:
 
@@ -12,7 +12,7 @@ TAVLE · runde 2 av 4
   3.  Ingrid    21 p    ● Astro
 ```
 
-Kari og Ola spiller sammen, i sanntid, fra to helt ulike teknologier, og skjermene deres ser like ut. Det er hele påstanden til Fristil, demonstrert av folk som ikke tenker på den.
+Kari og Ola spiller sammen, i sanntid, fra to helt ulike teknologier, og skjermene deres ser like ut. Det er hele påstanden til LO-TEK, demonstrert av folk som ikke tenker på den.
 
 ## Prøv det
 
@@ -87,7 +87,7 @@ det samme.
 
 Når runden er over, kommer resultatet som en **modal dialog**: hva du svarte, hva som var riktig, felt for felt, og hvorfor. Rakk du ikke fristen, sier den i stedet at saken ikke ble behandlet i tide, og at avviket er varslet til statsforvalteren. Lukker du dialogen mens du venter på neste sak, kommer du til den igjen med «Se resultatet».
 
-Den dialogen er grunnen til at `<fs-dialog>` finnes i Fristil. Å åpne en `<dialog>` er et kall, og en server som bare sender HTML kan ikke kalle noe; `<dialog open>` er bare en boks på siden. Demoen fant altså et hull i designsystemet, og hullet ble tettet der.
+Den dialogen er grunnen til at `<lt-dialog>` finnes i LO-TEK. Å åpne en `<dialog>` er et kall, og en server som bare sender HTML kan ikke kalle noe; `<dialog open>` er bare en boks på siden. Demoen fant altså et hull i designsystemet, og hullet ble tettet der.
 
 Har alle svart før fristen, kortes den inn til fire sekunder framfor å ende
 med én gang. Den som svarte sist trykket nettopp, og skal rekke å se sin egen
@@ -104,9 +104,9 @@ Poeng for riktig, ikke for raskest. En ren reflekskonkurranse ville latt nettver
 | Spillere, runde, svar | minutter | minne |
 | Evig toppliste | for alltid | SQLite |
 
-En omgang varer noen minutter, altså kortere enn en utrulling. Alt annet enn topplista er kortere enn levetiden til prosessen. En database å drifte ville vært én ting til som kan feile under en demonstrasjon, og den lærer ingen noe om Fristil.
+En omgang varer noen minutter, altså kortere enn en utrulling. Alt annet enn topplista er kortere enn levetiden til prosessen. En database å drifte ville vært én ting til som kan feile under en demonstrasjon, og den lærer ingen noe om LO-TEK.
 
-Starter prosessen på nytt, er omgangen borte og en ny begynner. Spillerne får beskjed gjennom `<fs-connection-status>` framfor en ødelagt skjerm.
+Starter prosessen på nytt, er omgangen borte og en ny begynner. Spillerne får beskjed gjennom `<lt-connection-status>` framfor en ødelagt skjerm.
 
 Fristen sendes som et **absolutt tidspunkt**, ikke «30 sekunder igjen». Hver klient teller ned selv, så et forsinket bud flytter ikke fristen, og de tre appene kan ikke komme i utakt.
 
@@ -179,9 +179,9 @@ bun run samtidig  # at tre spillere i tre utgaver ser den samme tavla
 bun run panel     # at panelet forteller sant om hva som kom over ledningen
 bun run vakthund  # at Datastar-utgaven kommer seg etter en strøm som dør
 bun run skall     # at hilsenen ikke legger seg over rammene i skallet
-bun run fristilbruk  # at appene bruker Fristil slik dokumentasjonen sier
+bun run lotekbruk  # at appene bruker LO-TEK slik dokumentasjonen sier
 bun run klasselikhet # at de tre utgavene bruker de samme klassene
-bun run markup    # at HTML-en appene sender stemmer med Fristil
+bun run markup    # at HTML-en appene sender stemmer med LO-TEK
 bun run sloyfe    # at én spiller i tre utgaver ikke setter spilltjeneren i sving
 ```
 
@@ -196,12 +196,12 @@ Den venter på at en runde er i gang framfor å hoppe over skjemaet når den
 lander midt i et oppgjør. En test som feiler tilfeldig blir ignorert, og da
 er den verdiløs.
 
-`tester/fristilbruk.ts` leser hva hver byggefunksjon faktisk sender ut, både
+`tester/lotekbruk.ts` leser hva hver byggefunksjon faktisk sender ut, både
 fra returverdien og fra navnene som henger på funksjonen, og feller enhver
-`fs-`-klasse skrevet for hånd der det finnes en bunter eller en vei til en
-import. Datastar-appen er med vilje utenfor: Kotlin kan ikke kalle `fs`.
+`lt-`-klasse skrevet for hånd der det finnes en bunter eller en vei til en
+import. Datastar-appen er med vilje utenfor: Kotlin kan ikke kalle `lt`.
 Den leser også hver `var(--…)` uten reserve i appene og `felles/`, og krever at
-variabelen finnes i Fristil eller er definert av appen selv. Der er Kotlin
+variabelen finnes i LO-TEK eller er definert av appen selv. Der er Kotlin
 med. En `var()` mot et token som ikke finnes, gjør hele erklæringen ugyldig
 uten et ord, og det hadde skjedd fire ganger før 0.22 døpte om alle tokenene
 på én gang.
@@ -227,21 +227,21 @@ rammene. Kapslene heter nå `spiller-datastar`, `spiller-tanstack` og
 har sitt eget domene.
 
 `tester/markup.ts` henter forsiden fra hver utgave, melder seg på og henter
-brettet, og kjører Fristils egen diagnostikk over begge, den samme som
+brettet, og kjører LO-TEKs egen diagnostikk over begge, den samme som
 editorutvidelsen: elementer som ikke
 finnes, attributter elementet ikke har, verdier utenfor lista og klasser
 skrevet feil. Malene i Kotlin-appen er strenger, og Astro og React skriver
 JSX, så ingen editor ser HTML-en som faktisk sendes. Første kjøring fant at
-Astro skriver `open` på `<fs-dialog>` som `open="true"`.
+Astro skriver `open` på `<lt-dialog>` som `open="true"`.
 
-`tester/klasselikhet.ts` samler `fs-`-klassene i DOM-en i hver utgave og
+`tester/klasselikhet.ts` samler `lt-`-klassene i DOM-en i hver utgave og
 krever likt sett. Den finnes fordi `paritet.ts` ikke så at temavelgeren i én
-utgave mistet `fs-toggle-group` og ble en kolonne uten ramme: den fant
+utgave mistet `lt-toggle-group` og ble en kolonne uten ramme: den fant
 fortsatt tre knapper med riktig tekst, så alle de andre vaktpostene var
 grønne mens skjermen var synlig ødelagt.
 
 Den sammenligner også felt for felt, nøklet på ledeteksten. Ett sett for hele
-siden så ikke at hjelpeteksten under kommunefeltet manglet `fs-help-text` i
+siden så ikke at hjelpeteksten under kommunefeltet manglet `lt-help-text` i
 to av tre utgaver, fordi klassen fantes på andre felt i de samme utgavene.
 Teksten var stor og mørk i TanStack og Astro og liten og grå i Datastar.
 
@@ -437,16 +437,16 @@ Regningen er nesten bare minne:
 JVM-ene har fått et tak på minnet i Dockerfilene. Uten det tar en JVM en
 firedel av det containeren har, enten den trenger det eller ikke.
 
-## To feller når Fristil brukes
+## To feller når LO-TEK brukes
 
 **I Astro skrives begge `class`-attributtene ut, og nettleseren beholder den
-første.** `{...fs.button()} class="min-klasse"` mister altså din egen klasse.
-Destrukturer i stedet: `const { class: k, ...knapp } = fs.button()`.
+første.** `{...lt.button()} class="min-klasse"` mister altså din egen klasse.
+Destrukturer i stedet: `const { class: k, ...knapp } = lt.button()`.
 
-**I JSX vinner den siste propen.** `{...fs.card()} className="fs-card kort"`
+**I JSX vinner den siste propen.** `{...lt.card()} className="lt-card kort"`
 kaster det byggefunksjonen ga, og virker likevel så lenge strengen gjentar
-klassen. Legger `fs.card()` noen gang til noe, forsvinner det i stillhet.
-Derfor finnes `med()` i `apper/tanstack/src/fristil.ts`.
+klassen. Legger `lt.card()` noen gang til noe, forsvinner det i stillhet.
+Derfor finnes `med()` i `apper/tanstack/src/lotek.ts`.
 
 Den andre er verre enn den første: Astro-fella gir feil utseende med en gang,
 JSX-fella gir riktig utseende helt til klassen endrer navn.
@@ -498,9 +498,9 @@ hilsenen det minste problemet.
 
 ## Datastar-appen
 
-Kotlin med Ktor. Den kan ikke kalle `fs.field()`, så den skriver klassene selv og lar `<fs-field>` gjøre koblingen i nettleseren. Serveren sender det samme området på nytt ved hver patch, og komponenten setter selv tilbake det morfingen river bort.
+Kotlin med Ktor. Den kan ikke kalle `lt.field()`, så den skriver klassene selv og lar `<lt-field>` gjøre koblingen i nettleseren. Serveren sender det samme området på nytt ved hver patch, og komponenten setter selv tilbake det morfingen river bort.
 
-Den henter Fristil **fra CDN, uten npm**. Det er sporet «Uten byggverktøy» i Fristils egen dokumentasjon, og denne appen er beviset på at det virker fra en JVM.
+Den henter LO-TEK **fra CDN, uten npm**. Det er sporet «Uten byggverktøy» i LO-TEKs egen dokumentasjon, og denne appen er beviset på at det virker fra en JVM.
 
 Strømmen ned til nettleseren har et hjerteslag når den har vært stille i
 femten sekunder, en kommentarlinje som holder forbindelsen i live når
@@ -514,7 +514,7 @@ Fire ting kostet tid, og alle fire er notert i koden:
 - **kotlinx.serialization utelater en verdi som er lik standardverdien**, også når kallstedet setter den uttrykkelig. Tavla sa «ukjent» om nettopp den kolonnen som bærer hele poenget. Standardverdien er fjernet, så hvert kallsted må si hva det er.
 - **Å bli med er en navigering, ikke en oppdatering.** Hendelsesstrømmen leser kapselen når den åpnes, én gang. Setter man kapselen midt i strømmens levetid, vet serveren fortsatt ikke hvem som sitter der, og dyttet innmeldingsskjemaet tilbake over spillet. Skjemaet er nå et vanlig skjema med omdirigering, som dessuten virker uten JavaScript.
 
-Etterprøvd med to nettlesere mot den publiserte pakken: den ene blir med, den andre ser henne dukke opp uten å gjøre noe, og et halvutfylt skjema beholder både fanevalget, feltverdiene og koblingen `<fs-field>` laget, gjennom en patch fra serveren.
+Etterprøvd med to nettlesere mot den publiserte pakken: den ene blir med, den andre ser henne dukke opp uten å gjøre noe, og et halvutfylt skjema beholder både fanevalget, feltverdiene og koblingen `<lt-field>` laget, gjennom en patch fra serveren.
 
 ## TanStack Start-appen
 
@@ -524,20 +524,20 @@ skjermen. Hendelsesstrømmen sender hele tilstanden ved hvert pulsslag, og
 innsendingen svarer med det samme skjermbildet, så det finnes bare én form
 data kommer i.
 
-Byggefunksjonene hentes fra `@fristil/designsystem/react`, som gir
+Byggefunksjonene hentes fra `@lo-tek/interfaces/react`, som gir
 `className` og `htmlFor`. Appen henter pakken **fra npm**, ikke fra CDN, og
-det er med vilje: den ene utgaven viser at Fristil virker uten byggverktøy,
+det er med vilje: den ene utgaven viser at LO-TEK virker uten byggverktøy,
 den andre at det virker med.
 
 Tre ting kostet tid, og alle tre ble rettet i designsystemet:
 
 - **`tabIndex` kom ut som en streng.** React vil ha et tall, så TypeScript
-  avviste `fs.tabs()` i hele appen. Det virket i nettleseren, siden React
+  avviste `lt.tabs()` i hele appen. Det virket i nettleseren, siden React
   gjør om verdien selv, så feilen fantes bare i typene.
 - **`open` kunne ikke sendes som tom streng.** React 19 setter egenskaper
   framfor attributter på egendefinerte elementer, og `el.open = ""` er usant,
   så dialogen åpnet seg ikke. Byggefunksjonene sender nå `true`.
-- **En id som lages av seg selv, overlever ikke hydrering.** `fs.field()`
+- **En id som lages av seg selv, overlever ikke hydrering.** `lt.field()`
   lagde en når den ikke fikk en, og serveren og nettleseren lagde da hver sin.
   `id` er påkrevd siden Fristil 0.11.0, og her kommer den fra Reacts
   `useId()`.
@@ -557,7 +557,7 @@ Tavleradene lages av den samme funksjonen på serveren og i øya. Uten den
 ville radmarkupen finnes to ganger, i en mal og i et skript, og de to ville
 gått fra hverandre første gang noen la til en kolonne.
 
-Kommunefeltet er verdt å se på: `<fs-suggestion>` filtrerer lista og tar
+Kommunefeltet er verdt å se på: `<lt-suggestion>` filtrerer lista og tar
 piltastene helt selv. Serveren sender alle kommunene, og appen har ikke en
 eneste linje kode for feltet. I React-utgaven rendrer appen bare treffene, og
 da står `prefiltered` på elementet, som slår av komponentens eget filter.
@@ -568,7 +568,7 @@ To ting kostet tid:
 
 - **Astro skriver to `class`-attributter** når en byggefunksjon spres sammen
   med en egen klasse, og nettleseren beholder det første. Klassen må trekkes
-  ut av spredningen. Det står i Fristils dokumentasjon, og jeg gjorde det
+  ut av spredningen. Det står i LO-TEKs dokumentasjon, og jeg gjorde det
   likevel feil i ni komponenter.
 - **Kommunelista ligger under en nøkkel i fila**, ikke i rota. Appen leste den
   som en liste, og feilen kom først når noen skulle fylle ut skjemaet. Nå sier
@@ -577,27 +577,27 @@ To ting kostet tid:
 ## Temaet
 
 Spillet kjører i Skatteetatens stil og tone, og det er ikke gjort ved å kopiere
-designsystemet deres. Det er gjort med Fristils egen temagenerator, av en
+designsystemet deres. Det er gjort med LO-TEKs egen temagenerator, av en
 oppskrift som ligger i repoet:
 
 ```bash
-cd tester && bun run tema     # leser felles/fristil.tema.json, skriver felles/tema.css
+cd tester && bun run tema     # leser felles/lotek.theme.json, skriver felles/tema.css
 ```
 
-Kommandoen pinner versjonen av Fristil den kjører. Skrift og form kom i 0.12.0,
-og `bunx @fristil/designsystem` uten versjon ville hentet den nyeste som
+Kommandoen pinner versjonen av LO-TEK den kjører. Skrift og form kom i 0.12.0,
+og `bunx @lo-tek/interfaces` uten versjon ville hentet den nyeste som
 tilfeldigvis er publisert.
 
-Oppskriften setter **skrift og form, og lar fargene stå**. Fristils
+Oppskriften setter **skrift og form, og lar fargene stå**. LO-TEKs
 standardfarger er regnet ut av Skatteetatens kulører, og å oppgi deres egne
-til generatoren gir de samme verdiene tilbake: `--aksent=#1362ae` gir den
+til generatoren gir de samme verdiene tilbake: `--accent=#1362ae` gir den
 samme aksentfamilien som ingen farge i det hele tatt, og det samme gjelder
 fare og besøkt. Det å sette dem i oppskriften ville bare vært støy.
 
-Advarsel er unntaket. Fristils standard er regnet av `#896508` og ikke av
+Advarsel er unntaket. LO-TEKs standard er regnet av `#896508` og ikke av
 Skatteetatens `#9f7509`. Fram til 0.22 var det et kontrasthensyn, siden
 deres farge ga 4,18:1 mot hvit. Med matrisen holder kontrasten uansett, og
-`--advarsel=#9f7509` ville bare gitt en litt annen familie, med fyll
+`--warning=#9f7509` ville bare gitt en litt annen familie, med fyll
 `#8a6500` mot `#896508`. Forskjellen er for liten til å ta inn i oppskriften.
 
 Verdiene er likevel ikke Skatteetatens lenger. Fra Fristil 0.22 er en farge
@@ -623,11 +623,11 @@ Skatteetatens verdier.
 
 Rammen og vekten krever Fristil 0.12.0. Skrift og hjørner virker fra 0.11.0.
 
-`felles/tema.css` er generert. Rediger `felles/fristil.tema.json` og kjør
+`felles/tema.css` er generert. Rediger `felles/lotek.theme.json` og kjør
 kommandoen på nytt.
 
 Temaet lastes som `/tema.css` i alle fire tjenestene med en skjerm, skallet
-medregnet. Det ligger i sitt eget lag, `fristil-tema`, erklært etter `fristil`,
+medregnet. Det ligger i sitt eget lag, `lotek-theme`, erklært etter `lotek`,
 så det vinner over pakkens standardverdier uansett når stilarkene lastes. Det
 er ikke en detalj: både Astro og TanStack Start legger sin bundlede CSS inn
 rett før `</head>`, altså etter en lenke appen selv har skrevet. `brett.css`
@@ -649,7 +649,7 @@ som gjorde det, og hva som kom over ledningen.
 Panelet spør ingen av appene. Det leser trafikken selv, og formatet kjennes
 igjen på innholdet framfor på hva noen påstår.
 
-Panelet får `fs` sendt inn, som et felt i `startPanel({ … })`, og importerer
+Panelet får `lt` sendt inn, som et felt i `startPanel({ … })`, og importerer
 det ikke selv. Fila er delt av tre apper med hvert sitt spor: TanStack og
 Astro bunter designsystemet og sender byggefunksjonene de allerede har, mens
 Datastar sender sin fra CDN. Importerte panelet dem selv, måtte adressen vært
@@ -675,16 +675,16 @@ nå at hver komponent som registreres faktisk står i markupen.
 
 | Komponent | Rolle i spillet |
 | --- | --- |
-| `<fs-field>` | feltene i vedtaket |
-| `<fs-tabs>` | Søknaden / Søkeren |
-| `<fs-popover>` | «Hva betyr hjemlene?» |
-| `<fs-error-summary>` | et ufullstendig vedtak |
-| `<fs-suggestion>` | kommunesøket, der en av fellene ligger |
-| `.fs-select` med `data-picker="styled"` | hjemmelen og «er noe feil», med lista tegnet i siden |
-| `<fs-dialog>` | resultatet når runden er over |
-| `<fs-connection-status>` | når sambandet til spilltjeneren ryker |
+| `<lt-field>` | feltene i vedtaket |
+| `<lt-tabs>` | Søknaden / Søkeren |
+| `<lt-popover>` | «Hva betyr hjemlene?» |
+| `<lt-error-summary>` | et ufullstendig vedtak |
+| `<lt-suggestion>` | kommunesøket, der en av fellene ligger |
+| `.lt-select` med `data-picker="styled"` | hjemmelen og «er noe feil», med lista tegnet i siden |
+| `<lt-dialog>` | resultatet når runden er over |
+| `<lt-connection-status>` | når sambandet til spilltjeneren ryker |
 
-`<fs-dialog>` finnes i Fristil på grunn av dette spillet. Å åpne en `<dialog>`
+`<lt-dialog>` finnes i LO-TEK på grunn av dette spillet. Å åpne en `<dialog>`
 er et kall, og en server som bare sender HTML kan ikke kalle noe. Demoen fant
 hullet, og det ble tettet i designsystemet framfor i appen.
 
@@ -712,15 +712,20 @@ til ved et uhell.
 Dette er alt serveren sender for innmeldingsfeltet:
 
 ```html
-<fs-field>
-  <label class="fs-label">Navnet ditt</label>
-  <input class="fs-input" name="navn" type="text" required>
-  <p class="fs-help-text">Vises på tavla for alle.</p>
-</fs-field>
+<lt-field>
+  <label class="lt-label" for="navn">Navnet ditt</label>
+  <input class="lt-input" id="navn" name="navn" type="text" required>
+  <p class="lt-help-text">Vises på tavla for alle.</p>
+</lt-field>
 ```
 
-Ingen id-er, ingen `for`, ingen `aria-describedby`. Komponenten setter det i
+Ingen `aria-describedby`. Komponenten setter koblingen til hjelpeteksten i
 nettleseren, og gjør det likt uansett hvilket språk serveren er skrevet i.
+
+`for` og `id` skriver serveren selv. Fram til Fristil 0.35.0 gjorde
+komponenten også det, men en id serveren ikke hadde sendt, fikk Datastar til
+å bytte ut feltet ved neste patch, med fokus og det som var skrevet. HTML
+krever dem dessuten for at feltet skal ha et navn før skriptet har kjørt.
 
 Serveren sender det samme området på nytt ved hver patch, og morfingen river
 da bort attributter som ikke står i det serveren sendte. Komponenten setter
@@ -730,9 +735,9 @@ Kotlin-mal måtte skrive av fra dokumentasjonen. Vil serveren eie tilstanden
 selv, står `server-controlled` på verten, og da reparerer komponenten
 ingenting.
 
-Det var fristende å skrive en Kotlin-utgave av `fs.field()` som regnet ut
+Det var fristende å skrive en Kotlin-utgave av `lt.field()` som regnet ut
 det samme. Det ville brutt med hele poenget: skulle hver server skrive
-Fristils regler på nytt, ville Fristil vært et JavaScript-designsystem med
+LO-TEKs regler på nytt, ville LO-TEK vært et JavaScript-designsystem med
 en manuell reserve for alle andre. Den utgaven er slettet igjen.
 
 Unntaket er elementer noe annet må peke på. Feiloppsummeringen lenker til
@@ -746,10 +751,10 @@ det, og skriv da resten òg.
 **Fredning er ikke det samme som reparasjon.** Da feltet fredet `aria-invalid`
 med `data-preserve-attr`, kunne serveren aldri melde feltet som ugyldig:
 morfingen nektet å sette verdien den selv hadde sendt. Det var den erfaringen
-som gjorde at Fristil sluttet å frede og begynte å reparere. Appens egen
+som gjorde at LO-TEK sluttet å frede og begynte å reparere. Appens egen
 klokke bruker fortsatt attributtet, for `style` og `data-rister` skrives av et
 skript i siden og finnes ikke i det serveren sender. Det er Datastars egen
-mekanisme for det klienten har skrevet, og har ingenting med Fristils
+mekanisme for det klienten har skrevet, og har ingenting med LO-TEKs
 komponenter å gjøre.
 
 **Gradle kjenner ikke `felles/` som en inngang.** Endret du en sak og kjørte

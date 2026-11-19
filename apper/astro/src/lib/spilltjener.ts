@@ -41,7 +41,7 @@ export async function tilstand(
  * En kapsel og ikke en overskrift. Testen satte først `x-fristil-test` på
  * hver forespørsel, og det brøt to ting: en egendefinert overskrift gjør en
  * forespørsel over domenegrensen til en som krever forhåndssjekk, så
- * hentingen av Fristil fra CDN ble blokkert, og satte testen den bare på
+ * hentingen av LO-TEK fra CDN ble blokkert, og satte testen den bare på
  * påmeldingen, måtte den avskjære selve navigeringen, som igjen ødela
  * kapselhåndteringen i React-utgaven. En kapsel er det samme mønsteret appen
  * bruker for spilleren og for temaet, og koster ingen av delene.

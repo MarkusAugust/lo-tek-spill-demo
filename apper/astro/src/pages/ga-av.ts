@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro"
 
-import { KAPSEL } from "../lib/fristil"
+import { KAPSEL } from "../lib/lotek"
 import { gaAv } from "../lib/spilltjener"
 
 export const prerender = false

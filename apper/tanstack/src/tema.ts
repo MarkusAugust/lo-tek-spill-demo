@@ -1,7 +1,7 @@
 /**
  * Fargetemaet, som brukeren velger og serveren må kjenne.
  *
- * Fristil følger `prefers-color-scheme` av seg selv, og `data-theme` på rota
+ * LO-TEK følger `prefers-color-scheme` av seg selv, og `data-theme` på rota
  * overstyrer. Valget lagres i en kapsel framfor i `localStorage`, fordi
  * serveren skriver `<html>` og må kunne sette attributtet selv. Gjør den
  * ikke det, melder React avvik ved hydreringen, og siden blinker lyst før

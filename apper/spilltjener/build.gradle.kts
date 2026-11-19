@@ -25,7 +25,7 @@ dependencies {
 
 kotlin { jvmToolchain(21) }
 
-application { mainClass.set("no.fristil.forstelinja.MainKt") }
+application { mainClass.set("no.lotek.forstelinja.MainKt") }
 
 tasks.test {
   useJUnitPlatform()

@@ -10,8 +10,8 @@
  * alene, og det er poenget: rammene er ikke en spesialutgave av appene.
  */
 
-/** Versjonen av Fristil skallet henter tokens fra. Samme som appene bruker. */
-const FRISTIL = "0.34.0"
+/** Versjonen av LO-TEK skallet henter tokens fra. Samme som appene bruker. */
+const LOTEK = "0.46.0"
 
 /**
  * Temaet, den samme fila som de tre appene serverer.
@@ -62,14 +62,14 @@ const SIDE = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Førstelinja · tre utgaver side om side</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fristil/designsystem@${FRISTIL}/src/tokens/tokens.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@lo-tek/interfaces@${LOTEK}/src/tokens/tokens.css">
 <link rel="stylesheet" href="/tema.css">
 <style>
-  /* Skallet eier bare rammene rundt. Fargene og avstandene er Fristils egne
+  /* Skallet eier bare rammene rundt. Fargene og avstandene er LO-TEKs egne
      tokens, slik at kanten rundt rammene ikke sier noe annet enn innholdet. */
   * { box-sizing: border-box; }
 
-  /* Skallet har ingen temavelger og følger systemet. Fristil setter ikke
+  /* Skallet har ingen temavelger og følger systemet. LO-TEK setter ikke
      lenger \`color-scheme\` på rota, så uten denne fikk en mørk maskin lyse
      rullefelt rundt rammene. */
   :root { color-scheme: light dark; }
@@ -79,32 +79,32 @@ const SIDE = `<!doctype html>
     min-block-size: 100vh;
     display: flex;
     flex-direction: column;
-    font-family: var(--fs-font-family-base, system-ui, sans-serif);
-    color: var(--fs-color-neutral-text-strong);
+    font-family: var(--lt-font-family-base, system-ui, sans-serif);
+    color: var(--lt-color-neutral-text-strong);
     /* Sideflaten med et snev av tekstfargen i seg, som i brett.css. Her sto
        det en gang semantic-page-subtle, et token som ikke finnes, og da er
        hele regelen ugyldig og flaten gjennomsiktig. */
     background: color-mix(
       in oklab,
-      var(--fs-color-neutral-text-strong) 5%,
-      var(--fs-color-neutral-canvas)
+      var(--lt-color-neutral-text-strong) 5%,
+      var(--lt-color-neutral-canvas)
     );
   }
 
   header {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--fs-spacing-3);
+    gap: var(--lt-spacing-3);
     align-items: baseline;
     justify-content: space-between;
-    padding: var(--fs-spacing-3) var(--fs-spacing-5);
-    border-block-end: 1px solid var(--fs-color-neutral-border-subtle);
-    background: var(--fs-color-neutral-canvas);
+    padding: var(--lt-spacing-3) var(--lt-spacing-5);
+    border-block-end: 1px solid var(--lt-color-neutral-border-subtle);
+    background: var(--lt-color-neutral-canvas);
   }
 
   h1 {
     margin: 0;
-    font-size: var(--fs-font-size-m);
+    font-size: var(--lt-font-size-m);
     font-weight: 600;
     letter-spacing: 0.01em;
   }
@@ -112,8 +112,8 @@ const SIDE = `<!doctype html>
   header p {
     margin: 0;
     max-inline-size: 60ch;
-    font-size: var(--fs-font-size-s);
-    color: var(--fs-color-neutral-text-subtle);
+    font-size: var(--lt-font-size-s);
+    color: var(--lt-color-neutral-text-subtle);
   }
 
   .rammer {
@@ -121,7 +121,7 @@ const SIDE = `<!doctype html>
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
-    background: var(--fs-color-neutral-border-subtle);
+    background: var(--lt-color-neutral-border-subtle);
     min-block-size: 0;
   }
 
@@ -129,31 +129,31 @@ const SIDE = `<!doctype html>
     display: flex;
     flex-direction: column;
     min-inline-size: 0;
-    background: var(--fs-color-neutral-canvas);
+    background: var(--lt-color-neutral-canvas);
   }
 
   .ramme__topp {
     display: flex;
-    gap: var(--fs-spacing-2);
+    gap: var(--lt-spacing-2);
     align-items: baseline;
     justify-content: space-between;
-    padding: var(--fs-spacing-2) var(--fs-spacing-3);
-    border-block-end: 1px solid var(--fs-color-neutral-border-subtle);
+    padding: var(--lt-spacing-2) var(--lt-spacing-3);
+    border-block-end: 1px solid var(--lt-color-neutral-border-subtle);
   }
 
   .ramme__navn {
-    font-size: var(--fs-font-size-s);
+    font-size: var(--lt-font-size-s);
     font-weight: 600;
   }
 
   .ramme__om {
-    font-size: var(--fs-font-size-xs);
-    color: var(--fs-color-neutral-text-subtle);
+    font-size: var(--lt-font-size-xs);
+    color: var(--lt-color-neutral-text-subtle);
   }
 
   .ramme__lenke {
-    font-size: var(--fs-font-size-xs);
-    color: var(--fs-color-accent-text);
+    font-size: var(--lt-font-size-xs);
+    color: var(--lt-color-accent-text);
   }
 
   iframe {

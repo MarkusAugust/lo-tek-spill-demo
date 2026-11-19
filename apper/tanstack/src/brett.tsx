@@ -1,8 +1,8 @@
-import { reportFailure, reportSuccess } from "@fristil/designsystem"
-import { fs } from "@fristil/designsystem/react"
+import { reportFailure, reportSuccess } from "@lo-tek/interfaces"
+import { lt } from "@lo-tek/interfaces/react"
 import { useEffect, useId, useRef, useState } from "react"
 
-import { APPNAVN, UTGAVER, lenkeTilUtgave, med } from "./fristil"
+import { APPNAVN, UTGAVER, lenkeTilUtgave, med } from "./lotek"
 import { type Tema, settTema } from "./tema"
 import type { Feil, Hjemmel, SakUt, Skjermbilde, TavleRad, Tilstand } from "./tilstand"
 
@@ -14,7 +14,7 @@ import type { Feil, Hjemmel, SakUt, Skjermbilde, TavleRad, Tilstand } from "./ti
  * HTML-biter, her sender den JSON og React setter sammen DOM-en i
  * nettleseren.
  *
- * Markupen skrives ikke for hånd her. `fs`-byggefunksjonene gir klassene og
+ * Markupen skrives ikke for hånd her. `lt`-byggefunksjonene gir klassene og
  * koblingen, og da kan den ikke komme i utakt med designsystemet.
  */
 
@@ -129,7 +129,7 @@ export function Topplinje({
 
           {tilstand.meg && (
             <p className="topplinje__meg">
-              <span {...fs.avatar({ size: "small" })} aria-hidden="true">
+              <span {...lt.avatar({ size: "small" })} aria-hidden="true">
                 {initialer(tilstand.meg.navn)}
               </span>
               <span className="topplinje__navnet">{tilstand.meg.navn}</span>
@@ -227,8 +227,8 @@ function Temavelger({ tema }: { tema: Tema }) {
    * gjøre noe, og `settTema` skriver både kapselen og rota.
    */
   return (
-    <fieldset {...med(fs.toggleGroup(), "temavelger")}>
-      <legend {...fs.srOnly()}>Fargetema</legend>
+    <fieldset {...med(lt.toggleGroup(), "temavelger")}>
+      <legend {...lt.srOnly()}>Fargetema</legend>
       {(
         [
           ["light", "Lyst"],
@@ -236,7 +236,7 @@ function Temavelger({ tema }: { tema: Tema }) {
           ["dark", "Mørkt"],
         ] as [Tema, string][]
       ).map(([verdi, tekst]) => (
-        <label className={fs.toggleGroup.option} key={verdi}>
+        <label className={lt.toggleGroup.option} key={verdi}>
           <input
             type="radio"
             name="tema"
@@ -289,43 +289,59 @@ function Utgavevelger({ spillerId, tema }: { spillerId: string | null; tema: Tem
  */
 function Sakskort({ sak }: { sak: SakUt }) {
   const [valgt, settValgt] = useState(0)
-  const faner = fs.tabs({ id: "sak", count: 2, selected: valgt, label: "Saken" })
-  const navn = ["Søknaden", "Søkeren"]
+  const rad = useRef<HTMLElement>(null)
+  const deler = [
+    { nokkel: "soknaden", navn: "Søknaden" },
+    { nokkel: "soker", navn: "Søkeren" },
+  ]
+  const faner = lt.tabs({
+    id: "sak",
+    keys: deler.map((d) => d.nokkel),
+    selected: valgt,
+    label: "Saken",
+  })
+
+  // Komponenten sier fra med `tab-select` når brukeren velger, med klikk,
+  // piltaster eller søk i siden, og React flytter valget. Uten
+  // `server-controlled` ville komponenten og React kjempet om det samme.
+  useEffect(() => {
+    const element = rad.current
+    if (!element) return
+    const velg = (e: Event) =>
+      settValgt((e as CustomEvent<{ index: number }>).detail.index)
+    element.addEventListener("tab-select", velg)
+    return () => element.removeEventListener("tab-select", velg)
+  }, [])
 
   return (
-    <section {...med(fs.card(), "kort sakskort")}>
+    <section {...med(lt.card(), "kort sakskort")}>
       <p className="sakskort__stempel">
-        <span {...fs.tag()}>Sak {sak.id}</span>
+        <span {...lt.tag()}>Sak {sak.id}</span>
         <span className="sakskort__status">Til behandling</span>
       </p>
 
-      <h2 {...med(fs.heading({ size: "m" }), "sakskort__tittel")}>
+      <h2 {...med(lt.heading({ size: "m" }), "sakskort__tittel")}>
         {sak.tittel}
       </h2>
-      <p {...med(fs.paragraph(), "sakskort__ingress")}>
+      <p {...med(lt.paragraph(), "sakskort__ingress")}>
         {sak.sammendrag}
       </p>
 
-      {/* Serveren skriver roller, kobling og hvilken fane som er valgt.
-          Komponenten flytter valget når brukeren blar. I denne appen er det
-          React som holder `selected`, og komponenten gjør det samme arbeidet
-          med piltastene. */}
-      <fs-tabs className="sakskort__faner">
-        <div {...faner.list}>
-          {navn.map((tekst, i) => (
-            <button
-              {...faner.tabs[i]}
-              key={tekst}
-              type="button"
-              onClick={() => settValgt(i)}
-            >
-              {tekst}
-            </button>
+      {/* Serveren skriver roller, kobling og hvilken fane som er valgt, og
+          React hydrerer uten avvik. Fanene er lenker til panelene. I denne
+          appen er det React som holder `selected`; komponenten tar
+          piltastene og sier fra med `tab-select`. */}
+      <lt-tabs className="sakskort__faner" server-controlled ref={rad}>
+        <ul {...faner.list}>
+          {deler.map((del, i) => (
+            <li {...faner.item} key={del.nokkel}>
+              <a {...faner.tabs[i]}>{del.navn}</a>
+            </li>
           ))}
-        </div>
+        </ul>
 
         <div {...faner.panels[0]}>
-          <p {...med(fs.paragraph(), "sakskort__tekst")}>
+          <p {...med(lt.paragraph(), "sakskort__tekst")}>
             {sak.tekst}
           </p>
           <p className="sakskort__signatur">
@@ -336,7 +352,7 @@ function Sakskort({ sak }: { sak: SakUt }) {
         </div>
 
         <div {...faner.panels[1]}>
-          <table {...fs.table()}>
+          <table {...lt.table()} aria-label="Opplysninger om søkeren">
             <tbody>
               <tr>
                 <th scope="row">Navn</th>
@@ -357,7 +373,7 @@ function Sakskort({ sak }: { sak: SakUt }) {
             </tbody>
           </table>
         </div>
-      </fs-tabs>
+      </lt-tabs>
     </section>
   )
 }
@@ -389,16 +405,16 @@ function Vedtakskort({
 }) {
   const { tilstand, kommuner, feil } = bilde
   const feilPa = (felt: string) => feil.find((f) => f.felt === felt)
-  const boks = fs.errorSummary({ count: feil.length, id: "feilboks" })
+  const boks = lt.errorSummary({ count: feil.length, id: "feilboks" })
   const [apen, settApen] = useState(false)
   const [markert, settMarkert] = useState(-1)
 
   const treff = skjema.kommune
     ? kommuner.filter((k) => k.toLowerCase().includes(skjema.kommune.toLowerCase()))
     : kommuner
-  const forslag = fs.suggestion({
+  const forslag = lt.suggestion({
     id: "kommune",
-    count: treff.length,
+    keys: treff,
     activeIndex: markert >= 0 ? markert : undefined,
     open: apen,
     help: true,
@@ -407,19 +423,19 @@ function Vedtakskort({
   })
 
   return (
-    <section {...med(fs.card(), "kort vedtakskort")}>
-      <h2 {...fs.heading({ size: "s" })}>Ditt vedtak</h2>
+    <section {...med(lt.card(), "kort vedtakskort")}>
+      <h2 {...lt.heading({ size: "s" })}>Ditt vedtak</h2>
       <p className="vedtakskort__ingress">
         Fire spørsmål, {tilstand.poeng.fullPott} poeng. Du kan svare én gang.
       </p>
 
       {/* Serveren skriver hele boksen, også overskriften og lista.
           Komponenten flytter bare fokus hit og tar klikkene på lenkene. */}
-      <fs-error-summary {...boks.host}>
+      <lt-error-summary {...boks.host}>
         {feil.length > 0 && (
           <>
             <h3 {...boks.title}>Du må rette {feil.length} feil</h3>
-            <ul {...fs.list()}>
+            <ul {...lt.list()}>
               {feil.map((f) => (
                 <li key={f.felt}>
                   <a href={`#${f.felt}`}>{f.melding}</a>
@@ -428,7 +444,7 @@ function Vedtakskort({
             </ul>
           </>
         )}
-      </fs-error-summary>
+      </lt-error-summary>
 
       <form
         className="skjema"
@@ -438,16 +454,16 @@ function Vedtakskort({
         }}
       >
         <fieldset
-          {...fs.fieldset({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
+          {...lt.fieldset({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
         >
-          <legend {...fs.legend()}>Utfall</legend>
+          <legend {...lt.legend()}>Utfall</legend>
           {[
             ["innvilget", "Innvilget"],
             ["avslatt", "Avslått"],
           ].map(([verdi, tekst]) => (
-            <div className={fs.radio.row} key={verdi}>
+            <div className={lt.radio.row} key={verdi}>
               <input
-                {...fs.radio({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
+                {...lt.radio({ state: feilPa("v-innvilget") ? "invalid" : undefined })}
                 type="radio"
                 id={verdi === "innvilget" ? "v-innvilget" : "v-avslatt"}
                 name="vedtak"
@@ -456,7 +472,7 @@ function Vedtakskort({
                 onChange={() => settSkjema({ ...skjema, vedtak: verdi! })}
               />
               <label
-                {...fs.label()}
+                {...lt.label()}
                 htmlFor={verdi === "innvilget" ? "v-innvilget" : "v-avslatt"}
               >
                 {tekst}
@@ -467,12 +483,12 @@ function Vedtakskort({
 
         {/* Feiloppsummeringen lenker hit, så serveren navngir feltet og
             skriver hele koblingen selv. */}
-        <fs-field>
-          <label {...fs.label()} htmlFor="hjemmel">
+        <lt-field>
+          <label {...lt.label()} htmlFor="hjemmel">
             Hjemmel
           </label>
           <select
-            {...fs.select({
+            {...lt.select({
               picker: "styled",
               state: feilPa("hjemmel") ? "invalid" : undefined,
             })}
@@ -490,11 +506,11 @@ function Vedtakskort({
             ))}
           </select>
           {feilPa("hjemmel") && (
-            <p {...fs.errorText()} id="hjemmel-feil">
+            <p {...lt.errorText()} id="hjemmel-feil">
               {feilPa("hjemmel")!.melding}
             </p>
           )}
-        </fs-field>
+        </lt-field>
 
         <Hjemmelhjelp hjemler={tilstand.hjemler} />
 
@@ -506,55 +522,60 @@ function Vedtakskort({
             komponenten ville gjort, så de to ville vært enige uansett.
             Attributtet står her fordi det er ærligere: filtreringen skjer én
             gang, i React, og demoen viser hva en app som filtrerer selv skal
-            gjøre. Antall treff leses opp av komponenten uansett. */}
-        <fs-suggestion className="kommunefelt" prefiltered>
+            gjøre. Antall treff leses opp av komponenten uansett, med
+            norske tekster: standardtekstene i LO-TEK er engelske. */}
+        <lt-suggestion
+          className="kommunefelt"
+          prefiltered
+          count-none="Ingen treff"
+          count-one="Ett treff"
+          count-other="{n} treff"
+        >
           <label {...forslag.label}>Bekreft kommunen søkeren hører til</label>
-          <div {...forslag.field}>
-            <input
-              {...forslag.control}
-              name="kommune"
-              value={skjema.kommune}
-              onChange={(e) => {
-                settSkjema({ ...skjema, kommune: e.target.value })
-                settApen(true)
-                settMarkert(-1)
-              }}
-              onFocus={() => settApen(true)}
-              onBlur={() => window.setTimeout(() => settApen(false), 120)}
-            />
-            <ul {...forslag.list}>
-              {treff.map((navn, i) => (
-                <li
-                  {...forslag.options[i]}
-                  key={navn}
-                  onMouseDown={() => {
-                    settSkjema({ ...skjema, kommune: navn })
-                    settApen(false)
-                  }}
-                >
-                  {navn}
-                </li>
-              ))}
-            </ul>
-            <p {...forslag.empty}>
-              Ingen treff. Finnes kommunen fortsatt?
-            </p>
-            <span {...forslag.status} />
-          </div>
-          <p {...fs.helpText()} {...forslag.help}>
+          <input
+            {...forslag.control}
+            name="kommune"
+            value={skjema.kommune}
+            onChange={(e) => {
+              settSkjema({ ...skjema, kommune: e.target.value })
+              settApen(true)
+              settMarkert(-1)
+            }}
+            onFocus={() => settApen(true)}
+            onBlur={() => window.setTimeout(() => settApen(false), 120)}
+          />
+          <ul {...forslag.list}>
+            {treff.map((navn, i) => (
+              <li
+                {...forslag.options[i]}
+                key={navn}
+                onMouseDown={() => {
+                  settSkjema({ ...skjema, kommune: navn })
+                  settApen(false)
+                }}
+              >
+                {navn}
+              </li>
+            ))}
+          </ul>
+          <p {...forslag.empty}>
+            Ingen treff. Finnes kommunen fortsatt?
+          </p>
+          <span {...forslag.status} />
+          <p {...lt.helpText()} {...forslag.help}>
             Begynn å skrive, så kommer forslagene. Finner du den ikke, la feltet stå tomt.
           </p>
           {feilPa("kommune") && (
-            <p {...fs.errorText()} {...forslag.error}>{feilPa("kommune")!.melding}</p>
+            <p {...lt.errorText()} {...forslag.error}>{feilPa("kommune")!.melding}</p>
           )}
-        </fs-suggestion>
+        </lt-suggestion>
 
-        <fs-field>
-          <label {...fs.label()} htmlFor="felle">
+        <lt-field>
+          <label {...lt.label()} htmlFor="felle">
             Er noe feil i søknaden?
           </label>
           <select
-            {...fs.select({
+            {...lt.select({
               picker: "styled",
               state: feilPa("felle") ? "invalid" : undefined,
             })}
@@ -570,17 +591,17 @@ function Vedtakskort({
             <option value="kommune">Kommunen</option>
             <option value="epost">E-postadressen</option>
           </select>
-          <p {...fs.helpText()} id="felle-hjelp">
+          <p {...lt.helpText()} id="felle-hjelp">
             Å se at alt er i orden teller like mye.
           </p>
           {feilPa("felle") && (
-            <p {...fs.errorText()} id="felle-feil">
+            <p {...lt.errorText()} id="felle-feil">
               {feilPa("felle")!.melding}
             </p>
           )}
-        </fs-field>
+        </lt-field>
 
-        <button {...med(fs.button(), "skjema__send")} type="submit">
+        <button {...med(lt.button(), "skjema__send")} type="submit">
           Fatt vedtak
         </button>
       </form>
@@ -597,14 +618,14 @@ function Vedtakskort({
  */
 function Hjemmelhjelp({ hjemler }: { hjemler: Hjemmel[] }) {
   const [apen, settApen] = useState(false)
-  const boks = fs.popover({ id: "hjemmelhjelp", open: apen })
-  const { className: listeKlasse, ...liste } = fs.list()
+  const boks = lt.popover({ id: "hjemmelhjelp", open: apen })
+  const { className: listeKlasse, ...liste } = lt.list()
 
   return (
-    <fs-popover {...boks.host} className="hjelpelenke" placement="bottom-start">
+    <lt-popover {...boks.host} className="hjelpelenke" placement="bottom-start">
       <button
         {...boks.trigger}
-        {...fs.button({ variant: "ghost" })}
+        {...lt.button({ variant: "ghost" })}
         type="button"
         onClick={() => settApen((a) => !a)}
       >
@@ -622,7 +643,7 @@ function Hjemmelhjelp({ hjemler }: { hjemler: Hjemmel[] }) {
           ))}
         </ul>
       </div>
-    </fs-popover>
+    </lt-popover>
   )
 }
 
@@ -656,11 +677,11 @@ function Kvittering({ tilstand }: { tilstand: Tilstand }) {
     : []
 
   return (
-    <section {...med(fs.card(), "kort vedtakskort")}>
-      <h2 {...fs.heading({ size: "s" })}>Vedtaket er fattet</h2>
+    <section {...med(lt.card(), "kort vedtakskort")}>
+      <h2 {...lt.heading({ size: "s" })}>Vedtaket er fattet</h2>
 
-      <div {...fs.alert({ color: farge })}>
-        <p className={fs.alert.title}>{overskrift}</p>
+      <div {...lt.alert({ color: farge })}>
+        <p className={lt.alert.title}>{overskrift}</p>
         <p>
           Du fikk{" "}
           <strong>
@@ -671,7 +692,7 @@ function Kvittering({ tilstand }: { tilstand: Tilstand }) {
       </div>
 
       {linjer.length > 0 && (
-        <ul {...med(fs.list({ variant: "plain" }), "kvittering")}>
+        <ul {...med(lt.list({ variant: "plain" }), "kvittering")}>
           {linjer.map(([navn, riktig, verdt]) => (
             <li className="kvittering__linje" data-riktig={String(riktig)} key={navn}>
               <span className="kvittering__felt">{navn}</span>
@@ -709,7 +730,7 @@ function BesteIRunden({ tilstand }: { tilstand: Tilstand }) {
           : `${delt.map((r) => r.navn).join(" og ")} kom likt best ut`
 
   return (
-    <p {...med(fs.alert({ color: "success" }), "beste")}>
+    <p {...med(lt.alert({ color: "success" }), "beste")}>
       <strong>{hvem}</strong> med {beste.sistePoeng} av {tilstand.poeng.fullPott} poeng.
     </p>
   )
@@ -736,11 +757,11 @@ function Oppgjor({ tilstand, apneResultat }: { tilstand: Tilstand; apneResultat:
 
       <BesteIRunden tilstand={tilstand} />
 
-      <section {...med(fs.card(), "kort fasitkort")}>
+      <section {...med(lt.card(), "kort fasitkort")}>
         <div className="fasitkort__topp">
-          <h2 {...fs.heading({ size: "s" })}>Fasit</h2>
+          <h2 {...lt.heading({ size: "s" })}>Fasit</h2>
           <button
-            {...fs.button({ variant: "secondary" })}
+            {...lt.button({ variant: "secondary" })}
             type="button"
             onClick={apneResultat}
           >
@@ -767,7 +788,7 @@ function Oppgjor({ tilstand, apneResultat }: { tilstand: Tilstand; apneResultat:
           </div>
         </dl>
 
-        <div {...fs.alert({ color: "info" })}>
+        <div {...lt.alert({ color: "info" })}>
           <p>{tilstand.forklaring ?? ""}</p>
         </div>
 
@@ -821,8 +842,8 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
   const mulige = tilstand.poeng.fullPott * tilstand.runderTotalt
 
   return (
-    <section {...med(fs.card(), "kort sluttkort")}>
-      <h2 {...fs.heading({ size: "m" })}>Vakta er over</h2>
+    <section {...med(lt.card(), "kort sluttkort")}>
+      <h2 {...lt.heading({ size: "m" })}>Vakta er over</h2>
 
       {meg && (
         <div className="plassering" data-plass={meg.plass}>
@@ -838,9 +859,11 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
         </div>
       )}
 
-      <h3 {...fs.heading({ size: "xs" })}>Omgangens resultat</h3>
-      <div className={fs.table.scroll} tabIndex={0}>
-        <table {...fs.table()}>
+      <h3 {...lt.heading({ size: "xs" })} id="slutt-omgangen">
+        Omgangens resultat
+      </h3>
+      <div className={lt.table.scroll} tabIndex={0}>
+        <table {...lt.table()} aria-labelledby="slutt-omgangen">
           <thead>
             <tr>
               <th>#</th>
@@ -868,7 +891,7 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
                   </td>
                   <td>{rad.poeng}</td>
                   <td>
-                    <span {...fs.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
+                    <span {...lt.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
                   </td>
                 </tr>
               ))
@@ -877,7 +900,7 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
         </table>
       </div>
 
-      <p {...fs.paragraph()}>
+      <p {...lt.paragraph()}>
         Ny omgang starter om{" "}
         <Nedtelling
           frist={tilstand.fristMs}
@@ -887,9 +910,11 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
         sekunder.
       </p>
 
-      <h3 {...fs.heading({ size: "xs" })}>Evig toppliste</h3>
-      <div className={fs.table.scroll} tabIndex={0}>
-        <table {...fs.table()}>
+      <h3 {...lt.heading({ size: "xs" })} id="slutt-toppliste">
+        Evig toppliste
+      </h3>
+      <div className={lt.table.scroll} tabIndex={0}>
+        <table {...lt.table()} aria-labelledby="slutt-toppliste">
           <thead>
             <tr>
               <th>#</th>
@@ -910,7 +935,7 @@ function Slutt({ tilstand }: { tilstand: Tilstand }) {
                   <td>{rad.navn}</td>
                   <td>{rad.poeng}</td>
                   <td>
-                    <span {...fs.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
+                    <span {...lt.badge({ color: farge(rad.stack) })}>{appnavn(rad.stack)}</span>
                   </td>
                 </tr>
               ))
@@ -933,7 +958,9 @@ function Tavle({ tilstand }: { tilstand: Tilstand }) {
 
   return (
     <>
-      <h2 {...fs.heading({ size: "s" })}>På vakt nå</h2>
+      <h2 {...lt.heading({ size: "s" })} id="tavle-tittel">
+        På vakt nå
+      </h2>
 
       {!oppgjor && paVakt > 1 && (
         <p className="vedtakskort__svart" data-alle={String(levert >= paVakt)}>
@@ -943,8 +970,8 @@ function Tavle({ tilstand }: { tilstand: Tilstand }) {
         </p>
       )}
 
-      <div className={fs.table.scroll} tabIndex={0}>
-        <table {...med(fs.table(), "tavle__tabell")}>
+      <div className={lt.table.scroll} tabIndex={0}>
+        <table {...med(lt.table(), "tavle__tabell")} aria-labelledby="tavle-tittel">
           <thead>
             <tr>
               <th>#</th>
@@ -964,7 +991,7 @@ function Tavle({ tilstand }: { tilstand: Tilstand }) {
                   <td>{rad.plass}</td>
                   <td>
                     <span className="tavle__navn">
-                      <span {...fs.avatar({ size: "small" })} aria-hidden="true">
+                      <span {...lt.avatar({ size: "small" })} aria-hidden="true">
                         {initialer(rad.navn)}
                       </span>
                       <span>
@@ -981,13 +1008,13 @@ function Tavle({ tilstand }: { tilstand: Tilstand }) {
                   </td>
                   <td>
                     {oppgjor ? (
-                      <span {...fs.badge({ color: farge(rad.stack) })}>
+                      <span {...lt.badge({ color: farge(rad.stack) })}>
                         {appnavn(rad.stack)}
                       </span>
                     ) : rad.harSvart ? (
-                      <span {...fs.badge({ color: "success" })}>Levert</span>
+                      <span {...lt.badge({ color: "success" })}>Levert</span>
                     ) : (
-                      <span {...fs.badge()}>Jobber</span>
+                      <span {...lt.badge()}>Jobber</span>
                     )}
                   </td>
                 </tr>
@@ -1023,7 +1050,7 @@ function Resultatdialog({
   // Dialogen hører til oppgjøret, og innholdet skal ikke stå i markupen
   // ellers. Spilltjeneren sender ingen fasit i en runde, men skjermen skal
   // ikke hvile på det.
-  if (tilstand.fase !== "oppgjor" || !fasit || !meg) return <fs-dialog id="resultat" />
+  if (tilstand.fase !== "oppgjor" || !fasit || !meg) return <lt-dialog id="resultat" />
 
   const svar = meg.svar
   const vurdering = meg.vurdering
@@ -1050,7 +1077,7 @@ function Resultatdialog({
         : utfall === "ingen" || utfall === "avvik"
           ? "danger"
           : "neutral"
-  const boks = fs.dialog({ titleId: "resultat-tittel", open: apen, color: farge })
+  const boks = lt.dialog({ titleId: "resultat-tittel", open: apen, color: farge })
 
   const overskrift =
     utfall === "full"
@@ -1096,7 +1123,7 @@ function Resultatdialog({
   const igjen = tilstand.grenseUtenSvar - meg.runderUtenSvar
 
   return (
-    <fs-dialog id="resultat" {...boks.host}>
+    <lt-dialog id="resultat" {...boks.host}>
       <dialog {...med(boks.dialog, "resultat")} data-utfall={utfall}>
         <div {...boks.header}>
           <h2 {...boks.title}>{overskrift}</h2>
@@ -1155,19 +1182,19 @@ function Resultatdialog({
           {/* Nøytral farge med vilje: toppfeltet over bærer utfallet, og to
               fargede flater oppå hverandre gjør det uklart hvilken av dem som
               betyr noe. */}
-          <div {...fs.alert()}>
-            <p className={fs.alert.title}>Sak {tilstand.sak.id}</p>
+          <div {...lt.alert()}>
+            <p className={lt.alert.title}>Sak {tilstand.sak.id}</p>
             <p>{tilstand.forklaring ?? ""}</p>
           </div>
         </div>
 
         <form method="dialog" {...boks.footer} onSubmit={() => settApen(false)}>
-          <button {...fs.button()} value="lukk">
+          <button {...lt.button()} value="lukk">
             Lukk
           </button>
         </form>
       </dialog>
-    </fs-dialog>
+    </lt-dialog>
   )
 }
 
@@ -1177,10 +1204,10 @@ function Resultatdialog({
  * Den vises bare før du har meldt deg på.
  */
 function Velkomst({ apen, settApen }: { apen: boolean; settApen: (a: boolean) => void }) {
-  const boks = fs.dialog({ titleId: "velkomst-tittel", open: apen, color: "brand" })
+  const boks = lt.dialog({ titleId: "velkomst-tittel", open: apen, color: "brand" })
 
   return (
-    <fs-dialog id="velkomst" {...boks.host}>
+    <lt-dialog id="velkomst" {...boks.host}>
       <dialog {...med(boks.dialog, "velkomst")}>
         <div {...boks.header}>
           <h2 {...boks.title}>Velkommen til Førstelinja</h2>
@@ -1199,17 +1226,17 @@ function Velkomst({ apen, settApen }: { apen: boolean; settApen: (a: boolean) =>
           </p>
           <p>Vi er trygge på at du vil merke forskjellen.</p>
 
-          <h3 {...med(fs.heading({ size: "xs" }), "velkomst__valg")}>
+          <h3 {...med(lt.heading({ size: "xs" }), "velkomst__valg")}>
             Velg din foretrukne utgave
           </h3>
-          <ul {...med(fs.list({ variant: "plain" }), "velkomst__liste")}>
+          <ul {...med(lt.list({ variant: "plain" }), "velkomst__liste")}>
             {UTGAVER.map((utgave) => (
               <li key={utgave.navn}>
                 {utgave.navn === APPNAVN ? (
                   <span className="velkomst__her">
                     <strong>{utgave.navn}</strong>
                     <span className="velkomst__om">{utgave.rammeverk}</span>
-                    <span {...fs.badge({ color: "success" })}>Du er her</span>
+                    <span {...lt.badge({ color: "success" })}>Du er her</span>
                   </span>
                 ) : (
                   <a className="velkomst__lenke" href={utgave.adresse}>
@@ -1230,12 +1257,12 @@ function Velkomst({ apen, settApen }: { apen: boolean; settApen: (a: boolean) =>
         <form method="dialog" {...boks.footer} onSubmit={() => settApen(false)}>
           {/* `autofocus` her, ellers tar `showModal()` den første lenken i
               lista, og et tilfeldig Enter sender deg til en annen utgave. */}
-          <button {...fs.button()} value="lukk" autoFocus>
+          <button {...lt.button()} value="lukk" autoFocus>
             Jeg merker nok forskjellen
           </button>
         </form>
       </dialog>
-    </fs-dialog>
+    </lt-dialog>
   )
 }
 
@@ -1248,15 +1275,15 @@ function Velkomst({ apen, settApen }: { apen: boolean; settApen: (a: boolean) =>
  */
 function BliMed({ tilstand }: { tilstand: Tilstand }) {
   /*
-   * Id-en kommer fra React, ikke fra Fristil.
+   * Id-en kommer fra React, ikke fra LO-TEK.
    *
-   * `fs.field()` lager en selv når den ikke får en, og den kan ikke bli den
+   * `lt.field()` lager en selv når den ikke får en, og den kan ikke bli den
    * samme på serveren og i nettleseren. Da melder React hydreringsfeil på
    * ledeteksten, feltet og hjelpeteksten, og koblingen mellom dem er brutt
    * til React har rettet den opp. `useId()` gir den samme verdien begge
    * steder, og det er hele grunnen til at kroken finnes.
    */
-  const felt = fs.field({ id: useId(), help: true })
+  const felt = lt.field({ id: useId(), help: true })
   const sekunder = Math.round(tilstand.rundeLengdeMs / 1000)
   const tid =
     sekunder % 60 !== 0
@@ -1266,24 +1293,24 @@ function BliMed({ tilstand }: { tilstand: Tilstand }) {
         : `${tallord(sekunder / 60)} minutter`
 
   return (
-    <section {...med(fs.card(), "kort blimed")}>
-      <h2 {...fs.heading({ size: "m" })}>Møt på vakt</h2>
-      <p {...med(fs.paragraph(), "blimed__ingress")}>
+    <section {...med(lt.card(), "kort blimed")}>
+      <h2 {...lt.heading({ size: "m" })}>Møt på vakt</h2>
+      <p {...med(lt.paragraph(), "blimed__ingress")}>
         Du er saksbehandler i førstelinja. {tallord(tilstand.runderTotalt)} saker, {tid} på
         hver. Finn riktig utfall, riktig hjemmel, riktig kommune, og feilen søkeren håpet
         du ikke så.
       </p>
 
       <form method="post" action="/bli-med">
-        <fs-field>
+        <lt-field>
           <label {...felt.label}>Navnet ditt</label>
-          <input {...fs.input()} {...felt.control} name="navn" type="text" required />
-          <p {...fs.helpText()} {...felt.help}>
+          <input {...lt.input()} {...felt.control} name="navn" type="text" required />
+          <p {...lt.helpText()} {...felt.help}>
             Vises på tavla for alle.
           </p>
-        </fs-field>
+        </lt-field>
 
-        <button {...med(fs.button(), "skjema__send")} type="submit">
+        <button {...med(lt.button(), "skjema__send")} type="submit">
           Begynn vakta
         </button>
       </form>
@@ -1345,7 +1372,7 @@ export function Skjerm({
      * første melding fra strømmen «reportSuccess is not a function».
      */
     const meld = (ok: boolean) => {
-      const linje = document.querySelector("fs-connection-status")
+      const linje = document.querySelector("lt-connection-status")
       if (linje) void (ok ? reportSuccess : reportFailure)(linje)
     }
 
@@ -1389,7 +1416,7 @@ export function Skjerm({
     } catch {
       // Et vedtak som forsvinner i stillhet er det verste som kan skje her:
       // spilleren tror hun har levert, og runden går fra henne.
-      const linje = document.querySelector("fs-connection-status")
+      const linje = document.querySelector("lt-connection-status")
       if (linje) void reportFailure(linje)
     }
   }
@@ -1402,8 +1429,8 @@ export function Skjerm({
         <Velkomst apen={velkomstApen} settApen={settVelkomstApen} />
       )}
 
-      <fs-connection-status
-        {...fs.connectionStatus()}
+      <lt-connection-status
+        {...lt.connectionStatus()}
         offline-text="Sambandet til etaten er nede"
         online-text="Sambandet er tilbake"
       />
@@ -1437,9 +1464,13 @@ export function Skjerm({
               )}
             </div>
 
-            <aside id="tavle" {...med(fs.card(), "kort tavle")}>
+            <section
+              id="tavle"
+              {...med(lt.card(), "kort tavle")}
+              aria-labelledby="tavle-tittel"
+            >
               <Tavle tilstand={tilstand} />
-            </aside>
+            </section>
 
             <Resultatdialog
               tilstand={tilstand}
