@@ -477,11 +477,11 @@ class SpillTest {
 
   @Test
   fun `«nei» er svaret på at saken er i orden`() = runTest {
-    val spill = nyttSpill()
+    // Sakene stokkes, så «neste sak» er ikke alltid en uten felle. Her har
+    // ingen av dem en.
+    val utenFelle = samling.copy(saker = samling.saker.map { it.copy(fasit = it.fasit.copy(felle = null)) })
+    val spill = Spill(utenFelle, toppliste, klokke, kommuner = kommuner)
     val kari = spill.bliMed("Kari", Stack.ASTRO)
-    // Sakene veksler mellom med og uten felle, så ta den som er uten.
-    if (spill.sak.fasit.felle != null) tilNesteSak(spill)
-    assertNull(spill.sak.fasit.felle)
 
     assertNull(spill.svar(kari.id, riktig(spill).copy(felle = "nei")))
 
