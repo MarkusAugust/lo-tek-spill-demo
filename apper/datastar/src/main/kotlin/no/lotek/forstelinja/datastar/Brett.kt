@@ -59,3 +59,16 @@ val PANEL_AVLYTT_JS: String by lazy {
   require(fil.exists()) { "Fant ingen panel-avlytt.js på «$sti». Sett PANEL_AVLYTT_JS_FIL." }
   fil.readText()
 }
+
+/**
+ * Ventesiden, lest fra `felles/venteside.html`.
+ *
+ * Felles for de tre utgavene, så de ser like ut i skallet. Den eneste
+ * forskjellen er stilarket: her kommer LO-TEK fra CDN, som resten av siden.
+ */
+val VENTESIDE: String by lazy {
+  val sti = System.getenv("VENTESIDE_FIL") ?: "../../felles/venteside.html"
+  val fil = File(sti)
+  require(fil.exists()) { "Fant ingen venteside.html på «$sti». Sett VENTESIDE_FIL." }
+  fil.readText().replace("{{LOTEK_CSS}}", STILARK.first())
+}

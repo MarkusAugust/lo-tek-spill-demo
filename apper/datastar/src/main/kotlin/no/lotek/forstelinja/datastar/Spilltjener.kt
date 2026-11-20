@@ -71,6 +71,28 @@ class Spilltjener(private val adresse: String) {
    * hver flytting fødte en hendelse til. Spilltjeneren druknet i tusenvis av
    * hendelser i sekundet, og spillet sto stille.
    */
+  /** Om spilltjeneren svarer nå, innen ett sekund. */
+  suspend fun erOppe(): Boolean =
+    runCatching { klient.get("$adresse/helse") { timeout { requestTimeoutMillis = 1000 } }.status.isSuccess() }
+      .getOrDefault(false)
+
+  /**
+   * Venter til spilltjeneren svarer, i opptil [ms] millisekunder.
+   *
+   * Railway legger spilltjeneren i dvale når ingen spiller, og den første
+   * forespørselen vekker den. Det tar rundt tre sekunder. Uten ventingen
+   * fikk den som kom først, ventesiden i et par sekunder; med den tar
+   * første lasting bare litt lenger.
+   */
+  suspend fun ventPa(ms: Long = 5000): Boolean {
+    val frist = System.currentTimeMillis() + ms
+    while (true) {
+      if (erOppe()) return true
+      if (System.currentTimeMillis() >= frist) return false
+      delay(250)
+    }
+  }
+
   suspend fun tilstand(spillerId: String?, meldUtgave: Boolean = false): Tilstand =
     klient
       .get("$adresse/api/tilstand") {

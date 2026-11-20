@@ -14,7 +14,8 @@ import Vedtakskort from "../components/Vedtakskort.astro"
 import Velkomst from "../components/Velkomst.astro"
 import { APPNAVN, KAPSEL } from "../lib/lotek"
 import { KOMMUNER } from "../lib/kommuner"
-import { svarInn, tilstand as hentTilstand } from "../lib/spilltjener"
+import { svarInn, tilstand as hentTilstand, ventPa } from "../lib/spilltjener"
+import { VENTESIDE } from "../lib/venteside"
 import type { Feil } from "../lib/tilstand"
 import { settKapsel, slettGammelForm } from "../lib/kapsel"
 import { feilFraAvvisning, valider } from "../lib/validering"
@@ -131,33 +132,29 @@ if (Astro.request.method === "POST") {
   }
 }
 
+// Sover spilltjeneren, vekker dette den, og ventesiden kommer først når den
+// ikke har svart på fem sekunder.
 let tilstand: Awaited<ReturnType<typeof hentTilstand>> | null = null
 try {
+  if (!(await ventPa())) throw new Error("Spilltjeneren svarte ikke på fem sekunder")
   // En dokumentlasting: her sier appen fra hvilken utgave spilleren sitter
   // i. Strømmen gjør det ikke, se `tilstand` i lib/spilltjener.ts.
   tilstand = await hentTilstand(spillerId, true)
 } catch {
-  // Spilltjeneren er nede, eller er ikke kommet opp ennå. En rå
-  // stakksporing sier ingenting til den som står og venter, og 503 er det
-  // ærlige svaret: siden virker ikke, den venter på noen andre.
-  Astro.response.status = 503
+  // Spilltjeneren er nede, eller er ikke kommet opp ennå. Ventesiden er den
+  // samme i alle tre appene, fra `felles/venteside.html`.
+}
+if (tilstand === null) {
+  return new Response(VENTESIDE, {
+    status: 503,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+  })
 }
 ---
 
 {
-  tilstand === null ? (
-    <Side tittel="Førstelinja åpner straks">
-      <main class="venteside">
-        <h1>Etaten åpner straks</h1>
-        <p>Saksbehandlingssystemet starter opp. Siden oppdaterer seg selv.</p>
-        <script is:inline>
-          setTimeout(function () {
-            location.replace("/")
-          }, 2000)
-        </script>
-      </main>
-    </Side>
-  ) : (
+  (
+
     <Side tittel={`Førstelinja · ${APPNAVN}`}>
       {tilstand.meg === null && !harSettVelkomst && !iRamme && <Velkomst />}
 

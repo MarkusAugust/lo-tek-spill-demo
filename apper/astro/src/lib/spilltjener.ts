@@ -10,6 +10,33 @@ import type { Kvittering, Tilstand } from "./tilstand"
  */
 const ADRESSE = process.env.SPILLTJENER ?? "http://127.0.0.1:8080"
 
+/** Om spilltjeneren svarer nå, innen ett sekund. */
+export async function erOppe(): Promise<boolean> {
+  try {
+    const svar = await fetch(`${ADRESSE}/helse`, { signal: AbortSignal.timeout(1000) })
+    return svar.ok
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Venter til spilltjeneren svarer, i opptil `ms` millisekunder.
+ *
+ * Railway legger spilltjeneren i dvale når ingen spiller, og den første
+ * forespørselen vekker den. Det tar rundt tre sekunder. Uten ventingen fikk
+ * den som kom først, ventesiden i et par sekunder; med den tar første
+ * lasting bare litt lenger.
+ */
+export async function ventPa(ms = 5000): Promise<boolean> {
+  const frist = Date.now() + ms
+  while (true) {
+    if (await erOppe()) return true
+    if (Date.now() >= frist) return false
+    await new Promise((f) => setTimeout(f, 250))
+  }
+}
+
 /**
  * Henter tilstanden slik én spiller skal se den.
  *

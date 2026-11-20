@@ -1165,3 +1165,30 @@ body:has(.lt-connection-status__bar) .topplinje {
   display: block;
   color: var(--lt-color-neutral-text-subtle);
 }
+
+/* Ventesiden
+   ------------------------------------------------------------------ */
+
+/* `felles/venteside.html`, når spilltjeneren ikke svarer. Kortet står
+   midt på skjermen, så det ser likt ut i en smal ramme i skallet og i et
+   helt vindu. */
+.venteside {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--lt-spacing-4);
+  background: var(--lt-color-neutral-canvas);
+}
+
+.venteside__kort {
+  max-width: 28rem;
+  display: grid;
+  justify-items: center;
+  gap: var(--lt-spacing-3);
+  text-align: center;
+}
+
+.venteside__kort h1,
+.venteside__tekst {
+  margin: 0;
+}

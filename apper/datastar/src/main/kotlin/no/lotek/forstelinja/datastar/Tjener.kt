@@ -53,6 +53,12 @@ fun biter(vararg biter: String): String = biter.joinToString("\n")
 
 fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) {
   routing {
+    // Ventesiden spør her, en gang i sekundet, og går videre når svaret er ja.
+    get("/klar") {
+      if (spilltjener.erOppe()) call.respondText("ja")
+      else call.respondText("nei", status = HttpStatusCode.ServiceUnavailable)
+    }
+
     get("/helse") { call.respondText("ok") }
 
     get("/tema.css") {
@@ -92,6 +98,9 @@ fun Application.datastarModul(spilltjener: Spilltjener, kommuner: List<String>) 
       }
 
       val spillerId = call.request.cookies[KAPSEL]
+      // Sover spilltjeneren, vekker denne den. Ventesiden kommer først når
+      // den ikke har svart på fem sekunder.
+      spilltjener.ventPa()
       val tilstand =
         try {
           // En dokumentlasting: her sier appen fra hvilken utgave spilleren

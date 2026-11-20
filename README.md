@@ -185,6 +185,7 @@ bun run vakthund  # at Datastar-utgaven kommer seg etter en strøm som dør
 bun run skall     # at hilsenen ikke legger seg over rammene i skallet
 bun run skallspill # at tre spillere i skallet får hvert sitt resultat av samme sak
 bun run kapsler   # at de tre utgavene skriver kapslene med de samme merkene
+bun run venteside # at den som kommer til et sovende spill, får spillet eller den samme ventesiden
 bun run lotekbruk  # at appene bruker LO-TEK slik dokumentasjonen sier
 bun run klasselikhet # at de tre utgavene bruker de samme klassene
 bun run markup    # at HTML-en appene sender stemmer med LO-TEK
@@ -424,17 +425,28 @@ Det krever at appene slipper taket når ingen ser på, og det gjør de:
   Pusterommet er ett minutt, siden en oppfriskning av siden er en avmelding
   og en påmelding med et øyeblikk imellom.
 - **Spilltjeneren holder varmen en stund etter siste spiller**, styrt av
-  `VARM_TIMER`. Standarden i koden er 0, altså av, og på en utviklermaskin skal
-  ingenting slå opp navn i bakgrunnen hvert annet minutt. I Railway står den på
-  3, så en omgang overlever en kaffepause. Det koster litt, siden en våken
-  tjeneste er en tjeneste som brukes.
+  `VARM_TIMER`, i timer. Standarden i koden er 0, altså av, og på en
+  utviklermaskin skal ingenting slå opp navn i bakgrunnen hvert annet minutt.
+  I Railway står den på 0.5, en halv time, så en omgang overlever en
+  kaffepause. Det koster litt, siden en våken tjeneste er en tjeneste som
+  brukes.
 
 Varmen holdes av et navneoppslag hvert annet minutt. Det er en fot i døra, og
 det eneste `Varme.kt` gjør. Railway ser bare på utgående pakker, og et oppslag
 er den billigste pakken vi kan sende.
 
-**Slå på dvalen i grensesnittet:** Settings → Deploy → Serverless, på hver av
-de fem tjenestene. Det finnes ingen kommando for det i `railway`-verktøyet.
+**Slå på dvalen** under Settings → Deploy → Serverless, på hver av de fem
+tjenestene, eller med `sleepApplication` gjennom Railways MCP-tjener. Den
+gjelder fra neste utrulling.
+
+**Den som kommer først, vekker spillet.** Målt i drift etter 40 minutter uten
+trafikk: appene svarer etter halvannet sekund, og spilltjeneren er oppe
+etter tre. Derfor venter hver app opptil fem sekunder på spilltjeneren før
+den gir opp, og de fleste merker bare at første lasting tar litt lenger.
+Svarer den ikke, kommer ventesiden, `felles/venteside.html`, den samme i
+alle tre. Den spør appen sin på `/klar` en gang i sekundet, og går videre
+til spillet med en gang svaret er ja. `tester/venteside.ts` slår av
+spilltjeneren og starter den igjen for å holde det i takt.
 
 Regningen er nesten bare minne:
 
