@@ -29,6 +29,7 @@ ENV BRETT_CSS_FIL=/app/felles/brett.css \
     TEMA_CSS_FIL=/app/felles/tema.css \
     PANEL_JS_FIL=/app/felles/panel.js \
     PANEL_AVLYTT_JS_FIL=/app/felles/panel-avlytt.js \
+    VENTESIDE_FIL=/app/felles/venteside.html \
     KOMMUNER_FIL=/app/felles/kommuner.json \
     HOST=:: \
     PORT=8082

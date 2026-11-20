@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs"
+import { createRequire } from "node:module"
 
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server"
 
 import { settKapsel, slettGammelForm, slettKapsel } from "./kapsel"
 import { KOMMUNER } from "./kommuner"
-import { KAPSEL, bliMed, erTest, gaAv, pulsen, svarInn, tilstand } from "./spilltjener"
+import { KAPSEL, bliMed, erOppe, erTest, gaAv, pulsen, svarInn, tilstand, ventPa } from "./spilltjener"
 import type { Skjermbilde } from "./tilstand"
 import { feilFraAvvisning, valider } from "./validering"
 
@@ -39,6 +40,24 @@ const TEMA_CSS: string = readFileSync(
   process.env.TEMA_CSS_FIL ?? "../../felles/tema.css",
   "utf8",
 )
+
+/**
+ * LO-TEK som ett stilark, til ventesiden.
+ *
+ * Resten av appen får stilarkene gjennom bunteren, men ventesiden er en
+ * vanlig HTML-fil og trenger en adresse. Den kommer fra pakken appen
+ * allerede har, ikke fra CDN.
+ */
+const LOTEK_CSS: string = readFileSync(
+  createRequire(import.meta.url).resolve("@lo-tek/interfaces/lotek.css"),
+  "utf8",
+)
+
+/** Ventesiden, samme fil som de to andre appene viser. */
+const VENTESIDE: string = readFileSync(
+  process.env.VENTESIDE_FIL ?? "../../felles/venteside.html",
+  "utf8",
+).replaceAll("{{LOTEK_CSS}}", "/lotek.css")
 
 /** Panelet, samme fil som de to andre appene serverer. */
 const PANEL_JS: string = readFileSync(
@@ -161,6 +180,17 @@ export default {
       return new Response(null, { status: 303, headers: hoder })
     }
 
+    if (url.pathname === "/lotek.css") {
+      return new Response(LOTEK_CSS, { headers: { "content-type": "text/css" } })
+    }
+
+    // Ventesiden spør her, en gang i sekundet, og går videre når svaret er ja.
+    if (url.pathname === "/klar") {
+      return (await erOppe())
+        ? new Response("ja")
+        : new Response("nei", { status: 503 })
+    }
+
     if (url.pathname === "/tema.css") {
       return new Response(TEMA_CSS, { headers: { "content-type": "text/css" } })
     }
@@ -243,6 +273,16 @@ export default {
       }
 
       return Response.json(await skjermbilde(spillerId, feil))
+    }
+
+    // Selve siden. Sover spilltjeneren, vekker dette den, og ventesiden
+    // kommer først når den ikke har svart på fem sekunder. Uten den kastet
+    // loaderen, og den som kom først, fikk 500.
+    if (url.pathname === "/" && request.method === "GET" && !(await ventPa())) {
+      return new Response(VENTESIDE, {
+        status: 503,
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+      })
     }
 
     return start(request)

@@ -18,29 +18,12 @@ private fun String.trygg(): String =
   replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
 /**
- * Siden du får når spilltjeneren ikke svarer.
+ * Siden du får når spilltjeneren ikke svarer, fra `felles/venteside.html`.
  *
- * Den henter seg selv på nytt, så den som står og venter under en utrulling
- * slipper å trykke. Ingen LO-TEK-komponenter her: poenget er at den virker
- * også når ingenting annet gjør det.
+ * Den går videre til spillet av seg selv når spilltjeneren svarer på
+ * `/klar`, så den som kommer til et sovende spill slipper å trykke.
  */
-fun venteside(): String =
-  """
-  <!doctype html>
-  <html lang="nb">
-  <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="3">
-  <title>Førstelinja</title>
-  </head>
-  <body style="font-family: system-ui, sans-serif; margin: 4rem auto; max-width: 32rem; padding: 0 1rem">
-    <h1>Førstelinja</h1>
-    <p>Sambandet til etaten er nede. Siden prøver igjen om tre sekunder.</p>
-  </body>
-  </html>
-  """
-    .trimIndent()
+fun venteside(): String = VENTESIDE
 
 /**
  * Velkomsthilsenen, som forklarer hvorfor det finnes tre utgaver.

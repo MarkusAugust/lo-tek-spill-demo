@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  Ventesiden, felles for de tre utgavene.
+
+  Den vises når spilltjeneren ikke svarer innen fem sekunder, oftest fordi
+  den sover: Railway legger tjenestene i dvale når ingen spiller, og den som
+  kommer først, vekker dem. Det tar rundt tre sekunder, så de fleste ser den
+  aldri. Den er reserven for når det tar lenger tid, eller spilltjeneren er
+  nede.
+
+  Én fil og ikke tre: i skallet står de tre ventesidene side om side, og de
+  skal være like. Adressen til LO-TEK-stilarket er det eneste hver app
+  fyller inn selv, siden Datastar henter designsystemet fra CDN og de to andre fra npm.
+
+  Siden spør appen sin om spilltjeneren er oppe, en gang i sekundet, og går
+  videre til spillet med en gang svaret er ja. Ingen blinkende omlasting
+  mens man venter.
+-->
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Førstelinja åpner</title>
+  <link rel="stylesheet" href="{{LOTEK_CSS}}">
+  <link rel="stylesheet" href="/tema.css">
+  <link rel="stylesheet" href="/brett.css">
+</head>
+<body>
+  <main class="venteside">
+    <section class="lt-card venteside__kort">
+      <span class="lt-spinner" data-size="large" aria-hidden="true"></span>
+      <h1 class="lt-heading" data-size="m">Kontoret åpner</h1>
+      <p class="lt-paragraph venteside__tekst" role="status">
+        Saksbehandlerne låser opp og finner fram sakene. Siden går videre av seg selv.
+      </p>
+    </section>
+  </main>
+  <script>
+    // Spør til spilltjeneren svarer, og last så spillet. Etter et minutt
+    // sier siden ærlig fra, men gir ikke opp.
+    var start = Date.now()
+    var sagtFra = false
+    function sjekk() {
+      fetch("/klar", { cache: "no-store" })
+        .then(function (svar) {
+          if (svar.ok) location.replace(location.href)
+          else vent()
+        })
+        .catch(vent)
+    }
+    function vent() {
+      if (!sagtFra && Date.now() - start > 60000) {
+        sagtFra = true
+        document.querySelector(".venteside__tekst").textContent =
+          "Kontoret holder lenger stengt enn vanlig. Siden prøver videre, og går til spillet når det åpner."
+      }
+      setTimeout(sjekk, 1000)
+    }
+    setTimeout(sjekk, 1000)
+  </script>
+</body>
+</html>

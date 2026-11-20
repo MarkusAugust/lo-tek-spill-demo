@@ -14,7 +14,8 @@
     "skallspill": "bun run skallspill.ts",
     "sloyfe": "bun run sloyfe.ts",
     "tema": "bunx @lo-tek/interfaces@0.46.0 theme ../felles/lotek.theme.json --out=../felles/tema.css",
-    "vakthund": "bun run vakthund.ts"
+    "vakthund": "bun run vakthund.ts",
+    "venteside": "bun run venteside.ts"
   },
   "devDependencies": {
     "@lo-tek/interfaces": "0.46.0",
